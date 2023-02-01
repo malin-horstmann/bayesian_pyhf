@@ -13,4 +13,4 @@ pip install numpy
 pip install matplotlib
 ```
 
-For a quick example, see `example.ipynb`. 
+For a quick example, see [example.ipynb](https://github.com/malin-horstmann/pyhf_pymc/blob/main/examples/example.ipynb). 
