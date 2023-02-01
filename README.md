@@ -1,4 +1,4 @@
-# Bayesian Analysis with pyhf using pyMC
+# Bayesian Analysis with pyhf using PyMC
 The aim of this project is to provide tools for Bayesian analysis of ``pyhf`` models using the Python library ``PyMC``.
 
 ## Setup
@@ -10,6 +10,7 @@ conda install -c conda-forge pymc
 
 conda install -c conda-forge jaxlib
 pip install numpy
+pip install numpyro
 pip install matplotlib
 ```
 
