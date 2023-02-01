@@ -1,5 +1,5 @@
 # Bayesian Analysis with pyhf using pyMC
-The aim of this project is to provide tools for Bayesian analysis of ``pyhf`` using the Python library ``PyMC``.
+The aim of this project is to provide tools for Bayesian analysis of ``pyhf`` models using the Python library ``PyMC``.
 
 ## Setup
 First create a Python virtual environment (here I use a Conda environment) and install the following packages with:
