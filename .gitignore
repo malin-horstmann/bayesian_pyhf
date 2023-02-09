@@ -161,3 +161,7 @@
 
  # macOS files
  .DS_Store
+ */.DS_Store
+
+ # random
+ PPC/ttbar_plots/
