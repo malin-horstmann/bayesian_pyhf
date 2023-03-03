@@ -39,54 +39,91 @@ class ExpDataClass(pt.Op):
         outputs[0][0] = np.asarray(result, dtype=node.outputs[0].dtype)
 
 ### Building the sampling parameters
-def build_parameters(model):
+# def build_parameters(model):
     
-    ## Index order
-    unconstr_idx, norm_idx, poiss_idx = [], [], []
-        # Unconstrained
-    for k,v in model.config.par_map.items():
-        if isinstance(v['paramset'], pyhf.parameters.unconstrained):
-            unconstr_idx = np.concatenate([np.arange(v['slice'].start,v['slice'].stop)])
+#     ## Index order
+#     unconstr_idx, norm_idx, poiss_idx = [], [], []
+#         # Unconstrained
+#     for k,v in model.config.par_map.items():
+#         if isinstance(v['paramset'], pyhf.parameters.unconstrained):
+#             unconstr_idx = np.concatenate([np.arange(v['slice'].start,v['slice'].stop)])
 
-    # Normal
-    for k,v in model.config.par_map.items():
-        if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal):
-            norm_idx = np.concatenate([np.arange(v['slice'].start,v['slice'].stop)])
+#         # Normal
+#     for k,v in model.config.par_map.items():
+#         if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal):
+#             norm_idx = np.concatenate([np.arange(v['slice'].start,v['slice'].stop)])
     
-    # Poisson
-    for k,v in model.config.par_map.items():
-        if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson):
-            poiss_idx = np.concatenate([np.arange(v['slice'].start,v['slice'].stop)])
+#         # Poisson
+#     for k,v in model.config.par_map.items():
+#         if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson):
+#             poiss_idx = np.concatenate([np.arange(v['slice'].start,v['slice'].stop)])
         
-    target = np.array(np.concatenate([unconstr_idx, norm_idx, poiss_idx]))
+#     target = np.array(np.concatenate([unconstr_idx, norm_idx, poiss_idx]))
+
+#     ## Parameters
+#     with pm.Model():
+#         # Unconstrained
+#         unconstr_pars, norm_pars, poiss_pars = [], [], []
+#         unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=[1], sigma=[1]))
+
+#             # Normal constraint (histosys, lumi, staterror)
+#         mu, sigma = [], []
+#         for k,v in model.config.par_map.items():
+#             if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal):
+#                 for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
+#                     mu.append(model.config.auxdata[int(i)])
+#                     sigma.append(model.constraint_model.constraints_gaussian.sigmas[int(i)])
+#             norm_pars.extend(pm.Normal('Normals', mu=mu, sigma=sigma))
+        
+#             # Poisson constraint (shapesys)
+#         # alpha, beta = [], []
+#         # for k,v in model.config.par_map.items():
+#         #     if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson):
+#         #         for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
+#         #             alpha.append(model.config.auxdata[int(i)]**3)
+#         #         beta = alpha
+#         # poiss_pars.extend(pm.Gamma('Gammas', alpha=alpha, beta=beta))
+
+#         pars = np.concatenate([unconstr_pars, norm_pars])
+#         final = pt.as_tensor_variable(pars[target.argsort()].tolist())
+
+#     return final
+
+def build_parameters(model):
+    with pm.Model():
+        ## Stitching
+        unconstr_idx = np.concatenate([
+            np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.unconstrained)
+        ])
+        norm_idx = np.concatenate([
+            np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal)
+        ])
+        
+        target = np.array(np.concatenate([unconstr_idx, norm_idx]))
 
         ## Parameters
             # Unconstrained
-    with pm.Model():
-        unconstr_pars, norm_pars, poiss_pars = [], [], []
-        unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=[1], sigma=[1]))
+        unconstr_pars = []
+        # unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=[np.random.normal(1, 0.02)], sigma=[1]))
+        # unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=[np.random.gamma(10000, 1/10000)], sigma=[1]))
+        # unconstr_pars.extend(pm.Gamma(f'{model.config.poi_name}', alpha = [10_000], beta = [10_000]))
+        unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=[1], sigma=[0.01]))
+        # unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=[np.random.gamma(10000, 10000)], sigma=[1]))
 
-            # Normal constraint (histosys, lumi, staterror)
-        mu, sigma = [], []
+
+            # Normal (histosys, lumi, staterror)
+        norm_pars = []
+        mu = []
+        sigma = []
         for k,v in model.config.par_map.items():
             if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal):
                 for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
                     mu.append(model.config.auxdata[int(i)])
                     sigma.append(model.constraint_model.constraints_gaussian.sigmas[int(i)])
-            norm_pars.extend(pm.Normal('Normals', mu=mu, sigma=sigma))
-        
-            # Poisson constraint (shapesys)
-        # alpha, beta = [], []
-        # for k,v in model.config.par_map.items():
-        #     if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson):
-        #         for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
-        #             alpha.append(model.config.auxdata[int(i)]**3)
-        #         beta = alpha
-        # poiss_pars.extend(pm.Gamma('Gammas', alpha=alpha, beta=beta))
+        norm_pars.extend(pm.Normal('Normals', mu=mu, sigma=sigma))
 
         pars = np.concatenate([unconstr_pars, norm_pars])
         final = pt.as_tensor_variable(pars[target.argsort()].tolist())
-
     return final
 
 ### Creating the inference class
