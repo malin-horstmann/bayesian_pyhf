@@ -21,8 +21,11 @@ from pytensor.graph import Apply, Op
 
 class ExpDataClass(pt.Op):
     """
-    Input: name, func (model.expected_actualdata())
-    Output: An object that can take tensor_variables as input and returns the value of func
+    Input: 
+        - name
+        - func (model.expected_actualdata())
+    Output: 
+        - Object that can take tensor_variables as input and returns the value of func
     """
     itypes = [pt.dvector]  
     otypes = [pt.dvector]  
@@ -43,8 +46,16 @@ class ExpDataClass(pt.Op):
         outputs[0][0] = np.asarray(result, dtype=node.outputs[0].dtype)
 
 
-def prepare_pars(model):
-
+def prepare_pars(model, unconstr_input):
+    """
+    Function that prepares the auxiliary data such that one can build priors for the bayesian inference from it.
+    Input: 
+        - pyhf-model, [[mu for all unconstr parameters], [sigma for all unconstr parameters]]
+    Output: 
+        - Target vector
+        - list of mu's and sigma's for the normal priors (unconst + constr. by normal) 
+        - list of a sigle value for the gamma prior
+    """
     ## Stitching order
     unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
     unconstr_idx, norm_idx, poiss_idx = [], [], []
@@ -69,7 +80,6 @@ def prepare_pars(model):
             ])
 
     ## This is still wonky
-
     if any(a == 'u' for a in b):
         target = np.array(np.concatenate([unconstr_idx]))
     if any(a == 'n' for a in b):
@@ -89,8 +99,8 @@ def prepare_pars(model):
 
 
     ## Unconstrained
-    unconstr_mu.append([1])
-    unconstr_sigma.append([0.01])
+    unconstr_mu.append(unconstr_input[0])
+    unconstr_sigma.append(unconstr_input[1])
 
     ## Normals
     for k,v in model.config.par_map.items():
@@ -111,9 +121,15 @@ def prepare_pars(model):
 
 class BayesianInference:
     """
-    Class for bayesian inference.
-    Input: pyhf-model, observations, the prepared parameters and the number of samples.
-    Returns PyMC-inference objects (posterior data and predictives, prior predictives).
+    Class for Bayesian inference.
+    Input: 
+        - pyhf-model
+        - observations
+        - the prepared parameters 
+        - the number of samples
+    Output: 
+        - posterior sampling, posterior predictive
+        - prior predictive
     """
 
     def posterior_sampling(model, obs, parameter_prep, n_samples):
