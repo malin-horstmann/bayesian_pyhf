@@ -82,7 +82,13 @@ def prepare_priors(model, unconstr_dict):
     return {**unconstr_dict, **norm_poiss_dict}
 
 def get_target(model):
-    ## Stitching order
+    """
+    Ordering vector for the parameters
+    Input: 
+        - pyhf model
+    Output: 
+        - index vector
+    """
     target, indices = [], []
     unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
     unconstr_idx, norm_idx, poiss_idx = [], [], []
@@ -126,9 +132,12 @@ def prepare_model(model, observations, priors, precision):
     """
     Preparing model for sampling
     Input: 
-        - 
+        - pyhf model
+        - observarions
+        - dictionary of priors
+        - model precision
     Output: 
-        - 
+        - dictinonary of the model with keys 'model', 'obs', 'priors', 'precision'
     """
 
     model_dict = {}
@@ -144,9 +153,9 @@ def sampling(prepared_model):
     """
     Sampling
     Input: 
-        - 
+        - the prepared model dictionary
     Output: 
-        - 
+        - post_data, post_pred, prior_pred
     """
     unconstr_pars, norm_pars, poiss_pars = [], [], []
     norm_mu, norm_sigma = [], []
@@ -154,6 +163,7 @@ def sampling(prepared_model):
     model = prepared_model['model']
     obs = prepared_model['obs']
     prior_dict = prepared_model['priors']
+    precision = prepared_model['precision']
     with pm.Model():
         
         ## Unconstrained
@@ -189,12 +199,12 @@ def sampling(prepared_model):
             if i.size != 0:
                 pars.append(i)
         pars = np.concatenate(pars)
-        target = external4.get_target(model)
+        target = get_target(model)
         final = pt.as_tensor_variable(pars[target.argsort()].tolist())
         
-        mainOp = external4.ExpDataClass('mainOp', jax.jit(model.expected_actualdata))
+        mainOp = ExpDataClass('mainOp', jax.jit(model.expected_actualdata))
 
-        main = pm.Normal('main', mu=mainOp(final), observed=obs)
+        main = pm.Normal('main', mu=mainOp(final), sigma=precision, observed=obs)
         post_data = pm.sample(500)
         post_pred = pm.sample_posterior_predictive(post_data)
         prior_pred = pm.sample_prior_predictive(500)
