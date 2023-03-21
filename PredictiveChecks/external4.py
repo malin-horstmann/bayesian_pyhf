@@ -54,12 +54,9 @@ def prepare_priors(model, unconstr_dict):
     Output: 
         - dictionary with all parameters (unconstrained, normal, poisson)
     """
-    target, indices = [], []
+
     unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
     unconstr_idx, norm_idx, poiss_idx = [], [], []
-
-    unconstr_input = [1, 0.1]
-
     norm_poiss_dict = {}
     
     ## Add normal priors to dictionary
@@ -89,40 +86,36 @@ def get_target(model):
     Output: 
         - index vector
     """
-    target, indices = [], []
-    unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
+
+    target = []
     unconstr_idx, norm_idx, poiss_idx = [], [], []
-
-    unconstr_input = [1, 0.1]
-
     norm_poiss_dict = {}
 
     for k, v in model.config.par_map.items():
+
         if isinstance(v['paramset'], pyhf.parameters.unconstrained):
             unconstr_idx = np.concatenate([
                 np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.unconstrained)
                 ])
-            break
+            pass
 
-    for k, v in model.config.par_map.items():
         if isinstance(v['paramset'], pyhf.parameters.paramsets.constrained_by_normal):
             norm_idx = np.concatenate([
                 np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal)
                 ])
-            break
+            pass
 
-    for k, v in model.config.par_map.items():
         if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson):
             poiss_idx = np.concatenate([
                 np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson)
                 ])
-            break
+            pass
 
     for i in [unconstr_idx, norm_idx, poiss_idx]:
         i = np.array(i)
         if i.size != 0:
-            indices.append(i)
-    target = np.concatenate(indices)
+            target.append(i)
+    target = np.concatenate(target)
 
     return target
 
@@ -149,7 +142,7 @@ def prepare_model(model, observations, priors, precision):
     return model_dict
 
 
-def sampling(prepared_model):
+def sampling(prepared_model, n_samples):
     """
     Sampling
     Input: 
@@ -166,18 +159,15 @@ def sampling(prepared_model):
     precision = prepared_model['precision']
     with pm.Model():
         
-        ## Unconstrained
         for key in prior_dict.keys():
             sub_dict = prior_dict[key]
 
+        ## Unconstrained
             if sub_dict['type'] == 'unconstrained':
                 unconstr_pars.extend(pm.Normal('Unconstrained', mu=sub_dict['input'][0], sigma=sub_dict['input'][1]))
-            break
+            pass
 
-        ## Normal and Poisson constraints
-        for key in prior_dict.keys():
-            sub_dict = prior_dict[key]
-            
+        ## Normal and Poisson constraints            
             if sub_dict['type'] == 'normal':
                 norm_mu.append(sub_dict['input'][0])
                 norm_sigma.append(sub_dict['input'][1])
@@ -192,9 +182,8 @@ def sampling(prepared_model):
         if np.array(poiss_alpha).size != 0:
             poiss_pars.extend(pm.Gamma('Gammas', alpha=list(np.concatenate(poiss_alpha)), beta=list(np.concatenate(poiss_beta))))
 
-        pars_list = [unconstr_pars, norm_pars, poiss_pars]
         pars = []
-        for i in pars_list:
+        for i in [unconstr_pars, norm_pars, poiss_pars]:
             i = np.array(i)
             if i.size != 0:
                 pars.append(i)
@@ -205,8 +194,8 @@ def sampling(prepared_model):
         mainOp = ExpDataClass('mainOp', jax.jit(model.expected_actualdata))
 
         main = pm.Normal('main', mu=mainOp(final), sigma=precision, observed=obs)
-        post_data = pm.sample(500)
+        post_data = pm.sample(n_samples)
         post_pred = pm.sample_posterior_predictive(post_data)
-        prior_pred = pm.sample_prior_predictive(500)
+        prior_pred = pm.sample_prior_predictive(n_samples)
 
         return post_data, post_pred, prior_pred
