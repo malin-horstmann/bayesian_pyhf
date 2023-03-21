@@ -54,12 +54,9 @@ def prepare_priors(model, unconstr_dict):
     Output: 
         - dictionary with all parameters (unconstrained, normal, poisson)
     """
-    target, indices = [], []
+
     unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
     unconstr_idx, norm_idx, poiss_idx = [], [], []
-
-    unconstr_input = [1, 0.1]
-
     norm_poiss_dict = {}
     
     ## Add normal priors to dictionary
@@ -89,12 +86,9 @@ def get_target(model):
     Output: 
         - index vector
     """
-    target, indices = [], []
-    unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
+
+    target = []
     unconstr_idx, norm_idx, poiss_idx = [], [], []
-
-    unconstr_input = [1, 0.1]
-
     norm_poiss_dict = {}
 
     for k, v in model.config.par_map.items():
@@ -121,8 +115,8 @@ def get_target(model):
     for i in [unconstr_idx, norm_idx, poiss_idx]:
         i = np.array(i)
         if i.size != 0:
-            indices.append(i)
-    target = np.concatenate(indices)
+            target.append(i)
+    target = np.concatenate(target)
 
     return target
 
