@@ -8,7 +8,6 @@ import numpy as np
 import json
 import pytensor 
 import pymc as pm
-import arviz as az
 import jax
 import jax.numpy as jnp
 import pyhf
@@ -46,7 +45,7 @@ class ExpDataClass(pt.Op):
         outputs[0][0] = np.asarray(result, dtype=node.outputs[0].dtype)
 
 
-def prepare_pars(model, unconstr_input):
+def prepare_priors(model, unconstr_input):
     """
     Function that prepares the auxiliary data such that one can build priors for the bayesian inference from it.
     Input: 
@@ -132,7 +131,7 @@ class BayesianInference:
         - prior predictive
     """
 
-    def posterior_sampling(model, obs, parameter_prep, n_samples):
+    def posterior_sampling(model, obs, prepared_priors, n_samples):
         a = list(model.config.par_map.values())
         b = []
         [b.append('u') for v in a if isinstance(v['paramset'], pyhf.parameters.unconstrained)]  
@@ -142,15 +141,15 @@ class BayesianInference:
         with pm.Model():
             unconstr_pars, norm_pars, poiss_pars = [], [], []
             if any(a == 'u' for a in b):
-                unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=parameter_prep[1][0], sigma=parameter_prep[2][0]))
+                unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=prepared_priors[1][0], sigma=prepared_priors[2][0]))
             if any(a == 'n' for a in b):
-                norm_pars.extend(pm.Normal('Normals', mu=parameter_prep[3], sigma=parameter_prep[4]))
+                norm_pars.extend(pm.Normal('Normals', mu=prepared_priors[3], sigma=prepared_priors[4]))
             if any(a == 'p' for a in b):
-                poiss_pars.extend(pm.Gamma('Gamma', alpha=parameter_prep[5], beta=parameter_prep[5]))
+                poiss_pars.extend(pm.Gamma('Gamma', alpha=prepared_priors[5], beta=prepared_priors[5]))
             
             pars = np.concatenate([unconstr_pars, norm_pars, poiss_pars])
 
-            final = pt.as_tensor_variable(pars[parameter_prep[0].argsort()].tolist())
+            final = pt.as_tensor_variable(pars[prepared_priors[0].argsort()].tolist())
 
             mainOp = ExpDataClass('mainOp', jax.jit(model.expected_actualdata))
 
@@ -161,7 +160,7 @@ class BayesianInference:
 
         return post_data, post_pred
 
-    def prior_sampling(model, obs, parameter_prep, n_samples):
+    def prior_sampling(model, obs, prepared_priors, n_samples):
         a = list(model.config.par_map.values())
         b = []
         [b.append('u') for v in a if isinstance(v['paramset'], pyhf.parameters.unconstrained)]  
@@ -171,15 +170,17 @@ class BayesianInference:
         with pm.Model():
             unconstr_pars, norm_pars, poiss_pars = [], [], []
             if any(a == 'u' for a in b):
-                unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=parameter_prep[1][0], sigma=parameter_prep[2][0]))
+                unconstr_pars.extend(pm.Normal(f'{model.config.poi_name}', mu=prepared_priors[1][0], sigma=prepared_priors[2][0]))
             if any(a == 'n' for a in b):
-                norm_pars.extend(pm.Normal('Normals', mu=parameter_prep[3], sigma=parameter_prep[4]))
+                norm_pars.extend(pm.Normal('Normals', mu=prepared_priors[3], sigma=prepared_priors[4]))
             if any(a == 'p' for a in b):
-                poiss_pars.extend(pm.Gamma('Gamma', alpha=parameter_prep[5], beta=parameter_prep[5]))
+                poiss_pars.extend(pm.Gamma('Gamma', alpha=prepared_priors[5], beta=prepared_priors[5]))
             
             pars = np.concatenate([unconstr_pars, norm_pars, poiss_pars])
+            print(type(pars))
+            print(len(pars))
 
-            final = pt.as_tensor_variable(pars[parameter_prep[0].argsort()].tolist())
+            final = pt.as_tensor_variable(pars[prepared_priors[0].argsort()].tolist())
 
             mainOp = ExpDataClass('mainOp', jax.jit(model.expected_actualdata))
 
