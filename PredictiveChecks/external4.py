@@ -56,7 +56,6 @@ def prepare_priors(model, unconstr_dict):
     """
 
     unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
-    unconstr_idx, norm_idx, poiss_idx = [], [], []
     norm_poiss_dict = {}
     
     ## Add normal priors to dictionary
