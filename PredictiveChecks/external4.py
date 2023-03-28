@@ -176,10 +176,10 @@ def sampling(prepared_model, n_samples):
                 poiss_alpha.append(sub_dict['input'][0])
                 poiss_beta.append(sub_dict['input'][1])
 
-        if np.array(norm_mu).size != 0:
+        if np.array(norm_mu, dtype=object).size != 0:
             norm_pars.extend(pm.Normal('Normals', mu=list(np.concatenate(norm_mu)), sigma=list(np.concatenate(norm_sigma))))
 
-        if np.array(poiss_alpha).size != 0:
+        if np.array(poiss_alpha, dtype=object).size != 0:
             poiss_pars.extend(pm.Gamma('Gammas', alpha=list(np.concatenate(poiss_alpha)), beta=list(np.concatenate(poiss_beta))))
 
         pars = []
