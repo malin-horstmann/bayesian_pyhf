@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+  workflow_dispatch:
+
+# Needed for micromamba pickup
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+  test:
+
+    runs-on: ${{ matrix.os }}
+    # On push events run the CI only on main by default, but run on any branch if the commit message contains '[ci all]'
+    if: >-
+      github.event_name != 'push'
+      || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      || (github.event_name == 'push' && github.ref != 'refs/heads/main' && contains(github.event.head_commit.message, '[ci all]'))
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Micromamba environment
+      uses: mamba-org/provision-with-micromamba@v15
+      with:
+        environment-file: environment.yml
+        environment-name: ci
+        extra-specs: |
+          python=${{ matrix.python-version }}
+        channels: conda-forge
+
+    - name: List installed conda packages
+      run: |
+        micromamba list
+
+    - name: List installed Python packages
+      run: |
+        python -m pip list
+
+    - name: Run predictive check notebooks
+      run: |
+        cd PredictiveChecks
+        jupyter execute priors.ipynb
+        ls -lhtra
