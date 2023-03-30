@@ -52,4 +52,5 @@ jobs:
       run: |
         cd src/pyhf_pymc
         jupyter execute priors.ipynb
+        jupyter execute HMC.ipynb
         ls -lhtra
