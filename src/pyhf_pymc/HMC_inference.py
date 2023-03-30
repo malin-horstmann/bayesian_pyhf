@@ -22,9 +22,9 @@ from aesara.link.jax.dispatch import jax_funcify
 
 from contextlib import contextmanager
 
-import sys
-sys.path.insert(1, '/Users/malinhorstmann/Documents/pyhf_pymc/src')
-from pyhf_pymc import prepare_inference
+# import sys
+# sys.path.insert(1, '/Users/malinhorstmann/Documents/pyhf_pymc/src')
+import prepare_inference
 
 ####
 
