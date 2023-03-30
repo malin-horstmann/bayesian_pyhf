@@ -17,3 +17,9 @@ from pytensor.graph import Apply, Op
 
 from contextlib import contextmanager
 
+import sys
+sys.path.insert(1, '/Users/malinhorstmann/Documents/pyhf_pymc/src')
+from pyhf_pymc import prepare_inference
+
+####
+
