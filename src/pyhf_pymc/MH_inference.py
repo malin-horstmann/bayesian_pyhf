@@ -47,10 +47,6 @@ class ExpDataClass(pt.Op):
         ## Output values of model.expected_actualdata
         outputs[0][0] = np.asarray(result, dtype=node.outputs[0].dtype)
 
-
-
-
-
 def sampling(prepared_model, n_samples):
     """
     Sampling
