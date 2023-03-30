@@ -52,5 +52,5 @@ jobs:
       run: |
         cd notebooks
         jupyter execute priors.ipynb
-	jupyter execute HMC.ipynb
+	      jupyter execute HMC.ipynb
         ls -lhtra
