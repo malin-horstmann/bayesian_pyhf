@@ -15,7 +15,7 @@ from pytensor import tensor as pt
 from pytensor.graph.basic import Apply
 from pytensor.graph import Apply, Op
 
-import aesara
+# import aesara
 import aesara.tensor as at
 from aesara.graph.op import Op
 from aesara.link.jax.dispatch import jax_funcify
