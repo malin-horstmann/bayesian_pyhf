@@ -50,6 +50,7 @@ jobs:
 
     - name: Run predictive check notebooks
       run: |
-        cd PredictiveChecks
+        cd notebooks
         jupyter execute priors.ipynb
+	jupyter execute HMC.ipynb
         ls -lhtra
