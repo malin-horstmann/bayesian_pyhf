@@ -48,8 +48,9 @@ jobs:
       run: |
         python -m pip list
 
-    - name: Run predictive check notebooks
+    - name: Run sampling notebooks
       run: |
-        cd PredictiveChecks
+        cd notebooks
         jupyter execute priors.ipynb
+        jupyter execute HMC.ipynb
         ls -lhtra
