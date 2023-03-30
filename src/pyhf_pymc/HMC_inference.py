@@ -9,8 +9,11 @@ pyhf.set_backend('jax')
 from jax import grad, jit, vmap, value_and_grad, random
 import jax
 import jax.numpy as jnp
+
 import pytensor
 from pytensor import tensor as pt
 from pytensor.graph.basic import Apply
 from pytensor.graph import Apply, Op
+
 from contextlib import contextmanager
+

@@ -1,0 +1,30 @@
+{"channels": [{
+    "name": "SRem_cuts",
+    "samples": [
+        {
+            "data": [
+                0.007000000216066837
+            ],
+            "modifiers": [
+                {
+                    "data": {
+                        "hi": 3.71,
+                        "lo": 0.01
+                    },
+                    "name": "ucbSRem",
+                    "type": "normsys"
+                }
+            ],
+            "name": "Bkg"
+        }
+    ]
+}, {"name": "SRmm_cuts", "samples": [{"data": [0.10999999940395355], "modifiers": [{"data": {"hi": 2.82, "lo": 0.01}, "name": "ucbSRmm", "type": "normsys"}], "name": "Bkg"}, {"data": [0.3183659017086029], "modifiers": [{"data": null, "name": "lumi", "type": "lumi"}, {"data": {"hi": 1.051, "lo": 0.949}, "name": "SigXSec", "type": "normsys"}, {"data": {"hi": 0.89, "lo": 1.11}, "name": "cuts_SRmm_LRT", "type": "normsys"}, {"data": {"hi": 0.985, "lo": 1.015}, "name": "cuts_SRmm_LRTfilter", "type": "normsys"}, {"data": {"hi": 1.02138, "lo": 0.978625}, "name": "ucsSRmm_Slep_1000_10", "type": "normsys"}, {"data": {"hi": 1.01721, "lo": 0.98279}, "name": "ucsSRmm_disp", "type": "normsys"}, {"data": {"hi": 1.07495, "lo": 0.927557}, "name": "ucsSRmm_mu_sel", "type": "normsys"}, {"data": {"hi": 1.01847, "lo": 0.980866}, "name": "ucsSRmm_mu_trig", "type": "normsys"}, {"data": {"hi": 0.995544, "lo": 1.01432}, "name": "ucsSRmm_pileupWeight", "type": "normsys"}, {"data": null, "name": "mu_Sig", "type": "normfactor"}], "name": "Slep_1000_10"}]}, {"name": "SRee_cuts", "samples": [{"data": [0.46000000834465027], "modifiers": [{"data": {"hi": 1.21, "lo": 0.79}, "name": "ucbSRee", "type": "normsys"}], "name": "Bkg"}, {"data": [0.43467068672180176], "modifiers": [{"data": null, "name": "lumi", "type": "lumi"}, {"data": {"hi": 1.051, "lo": 0.949}, "name": "SigXSec", "type": "normsys"}, {"data": {"hi": 0.89, "lo": 1.11}, "name": "cuts_SRee_LRT", "type": "normsys"}, {"data": {"hi": 0.985, "lo": 1.015}, "name": "cuts_SRee_LRTfilter", "type": "normsys"}, {"data": {"hi": 1.02001, "lo": 0.979991}, "name": "ucsSRee_Slep_1000_10", "type": "normsys"}, {"data": {"hi": 1.07435, "lo": 0.925643}, "name": "ucsSRee_disp", "type": "normsys"}, {"data": {"hi": 0.977736, "lo": 1.00314}, "name": "ucsSRee_pileupWeight", "type": "normsys"}, {"data": null, "name": "mu_Sig", "type": "normfactor"}], "name": "Slep_1000_10"}]}], "measurements": [{"config": {"parameters": [{"auxdata": [1.0], "bounds": [[0.915, 1.085]], "inits": [1.0], "name": "lumi", "sigmas": [0.017]}, {"bounds": [[0.0, 10.0]], "fixed": false, "inits": [1.0], "name": "mu_Sig"}], "poi": "mu_Sig"}, "name": "NormalMeasurement"}], "observations": [{"data": [9.99999993922529e-09], "name": "SRee_cuts"}, {"data": [9.99999993922529e-09], "name": "SRmm_cuts"}, {
+            "data": [
+                9.99999993922529e-09
+            ],
+            "name": "SRem_cuts"
+        }], "version": "1.0.0"}
+
+
+
+
