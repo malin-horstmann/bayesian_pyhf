@@ -50,7 +50,7 @@ jobs:
 
     - name: Run sampling notebooks
       run: |
-        cd notebooks
+        cd src/pyhf_pymc
         jupyter execute priors.ipynb
         jupyter execute HMC.ipynb
         ls -lhtra
