@@ -33,6 +33,7 @@ import prepare_inference
 
 ####
 
+    
 
 def plot_ppc(model, plot_name, obs, post_pred, prior_pred):
     nBins = len(model.expected_actualdata(model.config.suggested_init()))

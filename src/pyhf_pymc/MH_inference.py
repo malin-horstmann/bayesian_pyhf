@@ -27,7 +27,7 @@ class ExpDataClass(pt.Op):
         - name
         - func (model.expected_actualdata())
     Output: 
-        - Object that can take tensor_variables as input and returns the value of func
+        - instantiates object that can take tensor_variables as input and returns the value of func
     """
     itypes = [pt.dvector]  
     otypes = [pt.dvector]  
