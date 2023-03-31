@@ -34,6 +34,7 @@ import prepare_inference
 ####
 
 
+
 def plot_ppc(model, plot_name, obs, post_pred, prior_pred):
     nBins = len(model.expected_actualdata(model.config.suggested_init()))
     plt.step(np.linspace(0,nBins-1,nBins),prior_pred.prior_predictive.main[0].T, alpha = 0.01, c = 'steelblue', where = 'mid');
