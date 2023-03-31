@@ -109,3 +109,48 @@ def prepare_model(model, observations, priors, precision):
     model_dict['precision'] = precision
 
     return model_dict
+
+def priors2pymc(prepared_model):
+    unconstr_pars, norm_pars, poiss_pars = [], [], []
+    norm_mu, norm_sigma = [], []
+    poiss_alpha, poiss_beta = [], []
+    model = prepared_model['model']
+    obs = prepared_model['obs']
+    prior_dict = prepared_model['priors']
+    precision = prepared_model['precision']
+
+    with pm.Model():
+        
+        for key in prior_dict.keys():
+            sub_dict = prior_dict[key]
+
+        ## Unconstrained
+            if sub_dict['type'] == 'unconstrained':
+                unconstr_pars.extend(pm.Normal('Unconstrained', mu=sub_dict['input'][0], sigma=sub_dict['input'][1]))
+            pass
+
+        ## Normal and Poisson constraints            
+            if sub_dict['type'] == 'normal':
+                norm_mu.append(sub_dict['input'][0])
+                norm_sigma.append(sub_dict['input'][1])
+            
+            if sub_dict['type'] == 'poisson':
+                poiss_alpha.append(sub_dict['input'][0])
+                poiss_beta.append(sub_dict['input'][1])
+
+        if np.array(norm_mu, dtype=object).size != 0:
+            norm_pars.extend(pm.Normal('Normals', mu=list(np.concatenate(norm_mu)), sigma=list(np.concatenate(norm_sigma))))
+
+        if np.array(poiss_alpha, dtype=object).size != 0:
+            poiss_pars.extend(pm.Gamma('Gammas', alpha=list(np.concatenate(poiss_alpha)), beta=list(np.concatenate(poiss_beta))))
+
+        pars = []
+        for i in [unconstr_pars, norm_pars, poiss_pars]:
+            i = np.array(i)
+            if i.size != 0:
+                pars.append(i)
+        pars = np.concatenate(pars)
+        target = get_target(model)
+        final = pt.as_tensor_variable(pars[target.argsort()].tolist())
+
+        return final
