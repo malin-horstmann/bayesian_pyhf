@@ -21,7 +21,7 @@ import prepare_inference
 
 ####
 
-class ExpDataClass(pt.Op):
+class ExpDataOp(pt.Op):
     """
     Input: 
         - name
@@ -55,20 +55,18 @@ def sampling(prepared_model, n_samples):
     Output: 
         - post_data, post_pred, prior_pred
     """
-    unconstr_pars, norm_pars, poiss_pars = [], [], []
-    norm_mu, norm_sigma = [], []
-    poiss_alpha, poiss_beta = [], []
     model = prepared_model['model']
     obs = prepared_model['obs']
     prior_dict = prepared_model['priors']
     precision = prepared_model['precision']
+
     with pm.Model():
 
         final = prepare_inference.priors2pymc(prepared_model)
         
-        mainOp = ExpDataClass('mainOp', jax.jit(model.expected_actualdata))
+        mu = ExpDataOp('mainOp', jax.jit(model.expected_actualdata))
 
-        main = pm.Normal('main', mu=mainOp(final), sigma=precision, observed=obs)
+        ExpData = pm.Normal('ExpData', mu=mu(final), sigma=precision, observed=obs)
         post_data = pm.sample(n_samples)
         post_pred = pm.sample_posterior_predictive(post_data)
         prior_pred = pm.sample_prior_predictive(n_samples)
