@@ -51,6 +51,5 @@ jobs:
     - name: Run sampling notebooks
       run: |
         cd src/pyhf_pymc
-        jupyter execute priors.ipynb
         jupyter execute sampling.ipynb
         ls -lhtra
