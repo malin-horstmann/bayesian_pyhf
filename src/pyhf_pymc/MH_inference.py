@@ -1,3 +1,5 @@
+# 
+
 import numpy as np
 import matplotlib.pyplot as plt
 import json
@@ -23,7 +25,11 @@ import prepare_inference
 
 class ExpDataOp(pt.Op):
     """
-
+    Input: 
+        - name
+        - func (model.expected_actualdata())
+    Output: 
+        - instantiates object that can take tensor_variables as input and returns the value of func
     """
     itypes = [pt.dvector]  
     otypes = [pt.dvector]  
@@ -43,7 +49,6 @@ class ExpDataOp(pt.Op):
         ## Output values of model.expected_actualdata
         outputs[0][0] = np.asarray(result, dtype=node.outputs[0].dtype)
 
-
 def sampling(prepared_model, n_samples):
     """
     Sampling
@@ -59,12 +64,11 @@ def sampling(prepared_model, n_samples):
 
     with pm.Model():
 
-        pars = prepare_inference.priors2pymc(prepared_model)
+        final = prepare_inference.priors2pymc(prepared_model)
+        
+        mu = ExpDataOp('mainOp', jax.jit(model.expected_actualdata))
 
-        # mu = ExpDataOp('mainOp', jax.jit(model.expected_actualdata))
-        exp_data_op = ExpDataOp()
-        ExpData = pm.Normal('ExpData', mu=exp_data_op(pars), sigma=precision, observed=obs)
-
+        ExpData = pm.Normal('ExpData', mu=mu(final), sigma=precision, observed=obs)
         post_data = pm.sample(n_samples)
         post_pred = pm.sample_posterior_predictive(post_data)
         prior_pred = pm.sample_prior_predictive(n_samples)
