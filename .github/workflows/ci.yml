@@ -51,5 +51,5 @@ jobs:
     - name: Run sampling notebooks
       run: |
         cd src/pyhf_pymc
-        jupyter execute sampling2.ipynb
+        jupyter execute sampling.ipynb
         ls -lhtra
