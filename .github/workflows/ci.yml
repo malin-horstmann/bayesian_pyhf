@@ -50,6 +50,6 @@ jobs:
 
     - name: Run sampling notebooks
       run: |
-        cd src/pyhf_pymc
+        cd examples
         jupyter execute sampling.ipynb
         ls -lhtra

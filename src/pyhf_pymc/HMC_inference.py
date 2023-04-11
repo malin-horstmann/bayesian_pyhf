@@ -1,6 +1,5 @@
 """
-Attention: 
-    - I have to add this weird x by hand to ensure that the output of 
+
 """
 
 import numpy as np
@@ -20,20 +19,11 @@ from pytensor import tensor as pt
 from pytensor.graph.basic import Apply
 from pytensor.graph import Apply, Op
 
-# import aesara
-import aesara.tensor as at
-from aesara.graph.op import Op
-from aesara.link.jax.dispatch import jax_funcify
-
 from contextlib import contextmanager
 
-# import sys
-# sys.path.insert(1, '/Users/malinhorstmann/Documents/pyhf_pymc/src')
 import prepare_inference
 
 ####
-
-    
 
 def plot_ppc(model, plot_name, obs, post_pred, prior_pred):
     nBins = len(model.expected_actualdata(model.config.suggested_init()))

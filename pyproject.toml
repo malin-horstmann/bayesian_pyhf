@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyhf_pymc"
+version = "0.0.1"
+authors = [
+  { name="Example Author", email="author@example.com" },
+]
+description = "Tools for Bayesian analysis with pyhf"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "pytensor>=2.9.1",
+    "arviz>=0.15.1",
+    "pyhf>=0.7.0",
+    "jax>=0.4.2",
+    "pymc>=5.0.2",
+    "matplotlib>=3.6.3"
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/malin-horstmann/pyhf_pymc"
+"Bug Tracker" = "https://github.com/malin-horstmann/pyhf_pymc/issues"
