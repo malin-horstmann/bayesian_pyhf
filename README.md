@@ -2,7 +2,7 @@
 The aim of this project is to provide tools for Bayesian analysis of ``pyhf`` models using the Python library ``PyMC``.
 
 ## Setup
-To set up a Python virtual environment (here I use a Conda environment), download the following dependency file [environment.yml](https://github.com/malin-horstmann/pyhf_pymc/blob/main/environment.yml) and run:
+To set up a Python virtual environment, download the following dependency file [environment.yml](https://github.com/malin-horstmann/pyhf_pymc/blob/main/environment.yml) and run:
 
 ```
 conda env create --file environment.yml

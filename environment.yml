@@ -19,6 +19,7 @@ dependencies:
   - jupytext==1.14.4
   - pip>=23.0
   - aesara=2.8.12
+  - pyhf_pymc=0.0.1
 # nonstandard, but used by conda-lock
 platforms:
   - linux-64
