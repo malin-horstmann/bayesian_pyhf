@@ -111,6 +111,7 @@ def prepare_model(model, observations, priors, precision):
     return model_dict
 
 def priors2pymc(prepared_model):
+    input1, input2 = [], []
     unconstr_pars, norm_pars, poiss_pars = [], [], []
     norm_mu, norm_sigma = [], []
     poiss_alpha, poiss_beta = [], []
@@ -126,7 +127,9 @@ def priors2pymc(prepared_model):
 
         ## Unconstrained
             if sub_dict['type'] == 'unconstrained':
-                unconstr_pars.extend(pm.Normal('Unconstrained', mu=sub_dict['input'][0], sigma=sub_dict['input'][1]))
+                input1.append(sub_dict['input'][0])
+                input2.append(sub_dict['input'][1])
+                
             pass
 
         ## Normal and Poisson constraints            
@@ -137,6 +140,9 @@ def priors2pymc(prepared_model):
             if sub_dict['type'] == 'poisson':
                 poiss_alpha.append(sub_dict['input'][0])
                 poiss_beta.append(sub_dict['input'][1])
+
+        if np.array(input1, dtype=object).size != 0:
+            unconstr_pars.extend(pm.Normal('Unconstrained', mu=list(np.concatenate(input1)), sigma=list(np.concatenate(input2))))
 
         if np.array(norm_mu, dtype=object).size != 0:
             norm_pars.extend(pm.Normal('Normals', mu=list(np.concatenate(norm_mu)), sigma=list(np.concatenate(norm_sigma))))
