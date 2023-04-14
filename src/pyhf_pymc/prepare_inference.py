@@ -48,7 +48,7 @@ def get_target(model):
 
     target = []
     unconstr_idx, norm_idx, poiss_idx = [], [], []
-    norm_poiss_dict = {}
+    # norm_poiss_dict = {}
 
     for k, v in model.config.par_map.items():
 
