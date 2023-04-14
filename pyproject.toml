@@ -1,32 +1,80 @@
 [build-system]
-requires = ["hatchling"]
+requires = [
+    "hatchling>=1.13.0",
+    "hatch-vcs>=0.3.0",
+]
 build-backend = "hatchling.build"
 
 [project]
 name = "pyhf_pymc"
-version = "0.0.1"
-authors = [
-  { name="Example Author", email="author@example.com" },
-]
+dynamic = ["version"]
 description = "Tools for Bayesian analysis with pyhf"
 readme = "README.md"
+license = { text = "MIT" }  # SPDX short identifier
 requires-python = ">=3.7"
+authors = [
+  { name="Malin Horstmann", email="malin.horstmann@icloud.com" },
+]
+keywords = [
+    "fitting",
+    "physics",
+    "pyhf",
+]
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
-    "numpy",
-    "pytensor>=2.9.1",
-    "arviz>=0.15.1",
     "pyhf>=0.7.0",
     "jax>=0.4.2",
     "pymc>=5.0.2",
-    "matplotlib>=3.6.3"
+    "matplotlib>=3.6.3",
+    "numpy",  # compatible versions controlled through pyhf
+    "pytensor",  # compatible versions controlled through pymc
 ]
-
 
 [project.urls]
 "Homepage" = "https://github.com/malin-horstmann/pyhf_pymc"
-"Bug Tracker" = "https://github.com/malin-horstmann/pyhf_pymc/issues"
+"Issue Tracker" = "https://github.com/malin-horstmann/pyhf_pymc/issues"
+"Releases" = "https://github.com/malin-horstmann/pyhf_pymc/releases"
+"Source Code" = "https://github.com/malin-horstmann/pyhf_pymc"
+
+[project.optional-dependencies]
+
+# Developer extras
+test = [
+    "pytest>=6.0",
+    "coverage[toml]>=6.0.0",
+    "pytest-mock",
+]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/pyhf_pymc/_version.py"
+
+[tool.hatch.build.targets.sdist]
+# hatchling always includes:
+# pyproject.toml, .gitignore, any README, any LICENSE, AUTHORS
+only-include = [
+    "/src",
+    "/CITATION.cff"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyhf_pymc"]

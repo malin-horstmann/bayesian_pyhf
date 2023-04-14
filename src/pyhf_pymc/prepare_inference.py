@@ -1,33 +1,22 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import json
-import pymc as pm
-
 import pyhf
-pyhf.set_backend('jax')
-
-from jax import grad, jit, vmap, value_and_grad, random
-import jax
-import jax.numpy as jnp
-import pytensor
+import pymc as pm
 from pytensor import tensor as pt
-from pytensor.graph.basic import Apply
-from pytensor.graph import Apply, Op
-from contextlib import contextmanager
+
 
 def prepare_priors(model, unconstr_dict):
     """
     Preparing priors for model preparation
-    Input: 
+    Input:
         - pyhf model
-        - dictionary of all unconstrained parameters 
-    Output: 
+        - dictionary of all unconstrained parameters
+    Output:
         - dictionary with all parameters (unconstrained, normal, poisson)
     """
 
     unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
     norm_poiss_dict = {}
-    
+
     ## Add normal priors to dictionary
     for k,v in model.config.par_map.items():
         if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal):
@@ -50,9 +39,9 @@ def prepare_priors(model, unconstr_dict):
 def get_target(model):
     """
     Ordering vector for the parameters
-    Input: 
+    Input:
         - pyhf model
-    Output: 
+    Output:
         - index vector
     """
 
@@ -66,19 +55,16 @@ def get_target(model):
             unconstr_idx = np.concatenate([
                 np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.unconstrained)
                 ])
-            pass
 
         if isinstance(v['paramset'], pyhf.parameters.paramsets.constrained_by_normal):
             norm_idx = np.concatenate([
                 np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal)
                 ])
-            pass
 
         if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson):
             poiss_idx = np.concatenate([
                 np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson)
                 ])
-            pass
 
     for i in [unconstr_idx, norm_idx, poiss_idx]:
         i = np.array(i)
@@ -93,12 +79,12 @@ def get_target(model):
 def prepare_model(model, observations, priors, precision):
     """
     Preparing model for sampling
-    Input: 
+    Input:
         - pyhf model
         - observarions
         - dictionary of priors
         - model precision
-    Output: 
+    Output:
         - dictinonary of the model with keys 'model', 'obs', 'priors', 'precision'
     """
 
@@ -121,7 +107,7 @@ def priors2pymc(prepared_model):
     precision = prepared_model['precision']
 
     with pm.Model():
-        
+
         for key in prior_dict.keys():
             sub_dict = prior_dict[key]
 
@@ -129,14 +115,12 @@ def priors2pymc(prepared_model):
             if sub_dict['type'] == 'unconstrained':
                 input1.append(sub_dict['input'][0])
                 input2.append(sub_dict['input'][1])
-                
-            pass
 
-        ## Normal and Poisson constraints            
+        ## Normal and Poisson constraints
             if sub_dict['type'] == 'normal':
                 norm_mu.append(sub_dict['input'][0])
                 norm_sigma.append(sub_dict['input'][1])
-            
+
             if sub_dict['type'] == 'poisson':
                 poiss_alpha.append(sub_dict['input'][0])
                 poiss_beta.append(sub_dict['input'][1])
