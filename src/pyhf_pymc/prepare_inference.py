@@ -16,15 +16,16 @@ def prepare_priors(model, unconstr_dict):
 
     unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
     norm_poiss_dict = {}
-
-    ## Add normal priors to dictionary
+    ii = 0
     for k,v in model.config.par_map.items():
-        if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal):
-            a, b  = [], []
-            for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
-                a.append(model.config.auxdata[int(i)])
-                b.append(model.constraint_model.constraints_gaussian.sigmas[int(i)])
-            norm_poiss_dict[k] = {'type': 'normal', 'input': [a, b]}
+            if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal):
+                a, b  = [], []
+
+                for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
+                    a.append(model.config.auxdata[int(i)])
+                    b.append(model.constraint_model.constraints_gaussian.sigmas[ii])
+                    ii = ii + 1
+                norm_poiss_dict[k] = {'type': 'normal', 'input': [a, b]}
 
     ## Add poisson priors to dictionary
     for k,v in model.config.par_map.items():
