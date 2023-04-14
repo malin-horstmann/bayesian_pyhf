@@ -162,5 +162,8 @@ cython_debug/
 # macOS files
 .DS_Store
 
+# hatch versioning
+src/pyhf_pymc/_version.py
+
 # random
 PPC/ttbar_plots/
