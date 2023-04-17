@@ -127,7 +127,7 @@ def priors2pymc(prepared_model):
                 poiss_beta.append(sub_dict['input'][1])
 
         if np.array(input1, dtype=object).size != 0:
-            unconstr_pars.extend(pm.Normal('Unconstrained', mu=list(np.concatenate(input1)), sigma=list(np.concatenate(input2))))
+            unconstr_pars.extend(pm.Gamma('Unconstrained', alpha=list(np.concatenate(input1)), beta=list(np.concatenate(input2))))
 
         if np.array(norm_mu, dtype=object).size != 0:
             norm_pars.extend(pm.Normal('Normals', mu=list(np.concatenate(norm_mu)), sigma=list(np.concatenate(norm_sigma))))
