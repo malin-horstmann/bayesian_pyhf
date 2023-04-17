@@ -7,31 +7,49 @@ from pytensor import tensor as pt
 from pyhf_pymc import prepare_inference
 
 
-class ExpDataOp(pt.Op):
-    """
-    Input:
-        - name
-        - func (model.expected_actualdata())
-    Output:
-        - instantiates object that can take tensor_variables as input and returns the value of func
-    """
-    itypes = [pt.dvector]
+# VJP Op with gradients
+class VJPOp(Op):
+
+    itypes = [pt.dvector,pt.dvector]  
     otypes = [pt.dvector]
 
-    def __init__(self, name, func):
-        ## Add inputs as class attributes
-        self.func = func
-        self.name = name
+    def perform(self, node, inputs, outputs):
+        (parameters, tangent_vector) = inputs
+        results = jitted_vjp_expData(parameters, tangent_vector)
+
+        # if not isinstance(results, (list, tuple)):
+        #         results = (results,)
+                
+        # for i, r in enumerate(results):
+        #     outputs[i][0] = np.asarray(r)
+        outputs[0][0] = np.asarray(results)
+
+vjp_op = VJPOp()
+
+# Op with gradient method
+class ExpDataOp(Op):
+
+    itypes = [pt.dvector]  
+    otypes = [pt.dvector]
 
     def perform(self, node, inputs, outputs):
-        ## Method that is used when calling the Op
-        (theta,) = inputs  # Contains my variables
+        (parameters, ) = inputs
+        results = jitted_processed_expData(parameters)
 
-        ## Calling input function (in our case the model.expected_actualdata)
-        result = self.func(theta)
+        # if len(outputs) == 1:
+        #         outputs[0][0] = np.asarray(results)
+        #         return
+        # for i, r in enumerate(results):
+        #         outputs[i][0] = np.asarray(r)
+        outputs[0][0] = np.asarray(results)
 
-        ## Output values of model.expected_actualdata
-        outputs[0][0] = np.asarray(result, dtype=node.outputs[0].dtype)
+    def grad(self, inputs, output_gradients):
+        (parameters,) = inputs
+        (tangent_vector,) = output_gradients
+        return [vjp_op(parameters, tangent_vector)]
+
+        
+expData_op = ExpDataOp()
 
 def sampling(prepared_model, n_samples):
     """

@@ -6,12 +6,7 @@ from pytensor import tensor as pt
 
 def prepare_priors(model, unconstr_dict):
     """
-    Preparing priors for model preparation
-    Input:
-        - pyhf model
-        - dictionary of all unconstrained parameters
-    Output:
-        - dictionary with all parameters (unconstrained, normal, poisson)
+
     """
 
     unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
