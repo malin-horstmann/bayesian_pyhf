@@ -23,62 +23,85 @@ import arviz as az
 
 from pyhf_pymc import prepare_inference
 
+def make_op(model):
+    '''
+    
+    '''
+    @jax.jit
+    def processed_expData(parameters):
+        return model.expected_actualdata(parameters)
+    jitted_processed_expData = jax.jit(processed_expData)
 
-def make_ops(model):
-    """
+    @jax.jit
+    def vjp_expData(pars, tang_vec):
+        _, back = jax.vjp(processed_expData, pars)
+        return back(tang_vec)[0]
+    jitted_vjp_expData = jax.jit(vjp_expData)
 
-    """
+    class VJPOp(Op):
+        '''
+        
+        '''
+        itypes = [pt.dvector,pt.dvector]  
+        otypes = [pt.dvector]
+
+        def perform(self, node, inputs, outputs):
+            (parameters, tangent_vector) = inputs
+            results = jitted_vjp_expData(parameters, tangent_vector)
+
+            outputs[0][0] = np.asarray(results)
+
+    vjp_op = VJPOp()
+
     class ExpDataOp(Op):
-
+        '''
+        
+        '''
         itypes = [pt.dvector]  
         otypes = [pt.dvector]
 
         def perform(self, node, inputs, outputs):
             (parameters, ) = inputs
-
-            jitted_processed_expData = jax.jit(model.expected_actualdata)
             results = jitted_processed_expData(parameters)
 
-            if len(outputs) == 1:
-                    outputs[0][0] = np.asarray(results)
-                    return
-            for i, r in enumerate(results):
-                    outputs[i][0] = np.asarray(r)
+            outputs[0][0] = np.asarray(results)
 
-        # def grad(self, inputs, output_gradients):
-        #     (parameters,) = inputs
-        #     (tangent_vector,) = output_gradients
-        #     return [vjp_op(parameters, tangent_vector)]
+        def grad(self, inputs, output_gradients):
+            (parameters,) = inputs
+            (tangent_vector,) = output_gradients
+            return [vjp_op(parameters, tangent_vector)]
+
         
-    expData_op = ExpDataOp()
+    expData_op = ExpDataOp()    
 
     return expData_op
-       
-def sampling(prepared_model, n_samples, n_chains, sampling_method):
-    """
 
-    """
-    model = prepared_model['model']
-
-    expData_op = make_ops(model)
-
+def sampling(prepared_model, expData_op, draws, n_chains, step_method, ):
+    '''
+    
+    '''
     obs = prepared_model['obs']
-    # prior_dict = prepared_model['priors']
     precision = prepared_model['precision']
 
-    with pm.Model():
+    with pm.Model() as m:
         pars = prepare_inference.priors2pymc(prepared_model)
 
-
-        Expected_Data = pm.Normal("Expected_Data", mu=expData_op(pars), sigma = precision, observed=obs)
+        # ExpData = pm.Poisson("ExpData", mu=ExpData_Det, observed=obs)
+        Expected_Data = pm.Normal("Expected_Data", mu=expData_op(pars), sigma = 8, observed=obs)
         
         step1 = pm.Metropolis()
-
-        if sampling_method == 'Metropolis':
-            post_data = pm.sample(n_samples, chains=n_chains, cores=4, step=step1)
+        # step2 = pm.NUTS()
+        # step3 = pm.HamiltonianMC()
+        
+        if step_method == 'Metropolis':
+            post_data = pm.sample(draws=draws, chains = n_chains, cores=4, step=step1, progressbar=True)
+        if step_method == 'NUTS_with_advi':
+            post_data = pm.sample(draws=draws, chains = n_chains, cores=4, init='advi', progressbar=True)
+        if step_method == 'NUTS_with_jitter':
+            post_data = pm.sample(draws=draws, chains = n_chains, cores=4, progressbar=True)
 
         post_pred = pm.sample_posterior_predictive(post_data)
-        prior_pred = pm.sample_prior_predictive(n_samples)
+        prior_pred = pm.sample_prior_predictive(draws)
 
         return post_data, post_pred, prior_pred
 
