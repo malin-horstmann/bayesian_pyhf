@@ -76,7 +76,7 @@ def make_op(model):
 
     return expData_op
 
-def sampling(prepared_model, expData_op, draws, n_chains, step_method, ):
+def sampling(prepared_model, expData_op, draws, n_chains, tune, step_method):
     '''
     
     '''
@@ -96,9 +96,9 @@ def sampling(prepared_model, expData_op, draws, n_chains, step_method, ):
         if step_method == 'Metropolis':
             post_data = pm.sample(draws=draws, chains = n_chains, cores=4, step=step1, progressbar=True)
         if step_method == 'NUTS_with_advi':
-            post_data = pm.sample(draws=draws, chains = n_chains, cores=4, init='advi', progressbar=True)
+            post_data = pm.sample(draws=draws, chains = n_chains, cores=4, init='advi', tune=tune, progressbar=True)
         if step_method == 'NUTS_with_jitter':
-            post_data = pm.sample(draws=draws, chains = n_chains, cores=4, progressbar=True)
+            post_data = pm.sample(draws=draws, chains = n_chains, cores=4, tune=tune, progressbar=True)
 
         post_pred = pm.sample_posterior_predictive(post_data)
         prior_pred = pm.sample_prior_predictive(draws)
