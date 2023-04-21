@@ -81,13 +81,12 @@ def sampling(prepared_model, expData_op, draws, chains, step_method, tune):
     
     '''
     obs = prepared_model['obs']
-    precision = prepared_model['precision']
 
     with pm.Model() as m:
         pars = prepare_inference.priors2pymc(prepared_model)
 
         Expected_Data = pm.Poisson("Expected_Data", mu=expData_op(pars), observed=obs)
-        # Expected_Data = pm.Normal("Expected_Data", mu=expData_op(pars), sigma = precision, observed=obs)
+        # Expected_Data = pm.Normal("Expected_Data", mu=expData_op(pars), observed=obs)
         
         step1 = pm.Metropolis()
         # step2 = pm.NUTS()
