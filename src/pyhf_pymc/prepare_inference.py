@@ -72,23 +72,21 @@ def get_target(model):
 
 
 
-def prepare_model(model, observations, priors, precision):
+def prepare_model(model, observations, priors):
     """
     Preparing model for sampling
     Input:
         - pyhf model
         - observarions
         - dictionary of priors
-        - model precision
     Output:
-        - dictinonary of the model with keys 'model', 'obs', 'priors', 'precision'
+        - dictinonary of the model with keys 'model', 'obs', 'priors'
     """
 
     model_dict = {}
     model_dict['model'] = model
     model_dict['obs'] = observations
     model_dict['priors'] = priors
-    model_dict['precision'] = precision
 
     return model_dict
 
@@ -100,7 +98,6 @@ def priors2pymc(prepared_model):
     model = prepared_model['model']
     obs = prepared_model['obs']
     prior_dict = prepared_model['priors']
-    precision = prepared_model['precision']
 
     with pm.Model():
 
