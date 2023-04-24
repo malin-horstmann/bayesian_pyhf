@@ -22,3 +22,23 @@ import pymc as pm
 import arviz as az
 
 from pyhf_pymc import prepare_inference
+from pyhf_pymc import make_op
+
+from contextlib import contextmanager
+
+@contextmanager
+def pyhf_model(prepared_model):
+    '''
+    
+    '''
+    model = prepared_model['model']
+    obs = prepared_model['obs']
+    
+    expData_op = make_op.make_op(model)
+
+    with pm.Model():
+        pars = prepare_inference.priors2pymc(prepared_model)
+        Expected_Data = pm.Poisson("Expected_Data", mu=expData_op(pars), observed=obs)
+        yield
+        
+    return pyhf_model
