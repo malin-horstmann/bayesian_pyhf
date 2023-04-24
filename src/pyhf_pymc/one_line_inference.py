@@ -86,22 +86,29 @@ def sampling(prepared_model, expData_op, draws, chains, step_method, tune):
         pars = prepare_inference.priors2pymc(prepared_model)
 
         Expected_Data = pm.Poisson("Expected_Data", mu=expData_op(pars), observed=obs)
-        # Expected_Data = pm.Normal("Expected_Data", mu=expData_op(pars), observed=obs)
         
         step1 = pm.Metropolis()
-        # step2 = pm.NUTS()
-        # step3 = pm.HamiltonianMC()
         
         if step_method == 'Metropolis':
-            # post_data = pm.sample(chains = n_chains, draws=draws, cores=4, step=step1, progressbar=True)
-            post_data = pm.sample(chains=chains, draws=draws, step=step1)
+            thinning = 1
+            post_data = pm.sample(chains=chains, draws=thinning*draws, step=step1)
+            post_pred = pm.sample_posterior_predictive(post_data)
+            prior_pred = pm.sample_prior_predictive(draws)
+
         if step_method == 'NUTS_with_advi':
-            post_data = pm.sample(chains=chains, draws=draws, init='advi', tune=tune)
+            thinning = 1
+            post_data = pm.sample(chains=chains, draws=thinning*draws, init='advi', tune=tune)
+            post_pred = pm.sample_posterior_predictive(post_data)
+            prior_pred = pm.sample_prior_predictive(draws)
+
         if step_method == 'NUTS_with_jitter':
-            post_data = pm.sample(chains=chains, draws=draws, tune=tune)
+            thinning = 1
+            post_data = pm.sample(chains=chains, draws=thinning*draws, tune=tune)
+            post_pred = pm.sample_posterior_predictive(post_data)
+            prior_pred = pm.sample_prior_predictive(draws)
 
-        post_pred = pm.sample_posterior_predictive(post_data)
-        prior_pred = pm.sample_prior_predictive(draws)
+        # How should I return this?
+        # post_data.posterior = post_data.posterior.thin(thinning)
 
-        return post_data , post_pred, prior_pred
+        return post_data, post_pred, prior_pred
 
