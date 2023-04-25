@@ -23,10 +23,11 @@ import arviz as az
 
 from pyhf_pymc import prepare_inference
 
-def make_op(model):
+def make_op(prepared_model):
     '''
     
     '''
+    model = prepared_model['model']
     @jax.jit
     def processed_expData(parameters):
         return model.expected_actualdata(parameters)
