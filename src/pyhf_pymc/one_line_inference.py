@@ -32,7 +32,7 @@ def sampling(prepared_model, draws, chains, step_method, tune):
     '''
     obs = prepared_model['obs']
     model = prepared_model['model']
-    expData_op = make_op.make_op(prepared_model)
+    expData_op = make_op.make_op(model)
 
     with pm.Model() as m:
         pars = prepare_inference.priors2pymc(prepared_model)

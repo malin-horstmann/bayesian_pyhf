@@ -34,7 +34,7 @@ def pyhf_model(prepared_model):
     model = prepared_model['model']
     obs = prepared_model['obs']
     
-    expData_op = make_op.make_op(prepared_model)
+    expData_op = make_op.make_op(model)
 
     with pm.Model():
         pars = prepare_inference.priors2pymc(prepared_model)
