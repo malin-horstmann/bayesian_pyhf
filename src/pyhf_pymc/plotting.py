@@ -23,12 +23,15 @@ import arviz as az
 
 from pyhf_pymc import prepare_inference
 from pyhf_pymc import make_op
+from pyhf_pymc import infer
 
 blue = '#1F449C'
 orange = '#E57A77'
 
-def prior_posterior_predictives(model, observed, post_pred, prior_pred, bin_steps):
-
+def prior_posterior_predictives(model, data, post_pred, prior_pred, bin_steps):
+    '''
+    
+    '''
     nBins = len(model.expected_actualdata(model.config.suggested_init()))
 
     # Build means
@@ -48,7 +51,7 @@ def prior_posterior_predictives(model, observed, post_pred, prior_pred, bin_step
         plt.scatter(np.full(len(post_pred.posterior_predictive.Expected_Data[0].T[i]), i), post_pred.posterior_predictive.Expected_Data[0].T[i], alpha=0.1, color=blue, linewidths=0)
 
     # Plot data
-    plt.scatter(np.arange(nBins), observed, marker='P', c = 'k',s=70, zorder = 999, label = "Data")
+    plt.scatter(np.arange(nBins), data, marker='P', c = 'k',s=70, zorder = 999, label = "Data")
 
     plt.legend(loc='upper left')
     plt.xticks(np.arange(0, nBins, bin_steps))
@@ -56,7 +59,9 @@ def prior_posterior_predictives(model, observed, post_pred, prior_pred, bin_step
     plt.ylabel('Events')
 
 def calibration(prepared_model, prior_pred):
-
+    '''
+    
+    '''
     # Sampling
     model = prepared_model['model']
     expData_op = make_op.make_op(model)
@@ -101,3 +106,56 @@ def calibration(prepared_model, prior_pred):
     plt.show()
 
     return post_Normals, post_Unconstrained, post_data
+
+def plot_autocorrelation(model, unconstrained_priors, data):
+    '''
+    
+    '''
+    with infer.model(model, unconstrained_priors, data):
+        step = pm.Metropolis()
+        post_data_MH = pm.sample(100, chains = 1, step=step)
+
+    with infer.model(model, unconstrained_priors, data):
+        step = pm.Metropolis()
+        post_data_MH_thinned = pm.sample(1200, chains = 1, step=step)
+
+    with infer.model(model, unconstrained_priors, data):
+        post_data_NUTS = pm.sample(100, chains = 1)
+
+    with infer.model(model, unconstrained_priors, data):
+        post_data_NUTS_thinned = pm.sample(600, chains = 1)
+
+    thinned_MH = post_data_MH_thinned.posterior.thin(12)
+    thinned_NUTS = post_data_NUTS_thinned.posterior.thin(6)
+
+    # Metropolis
+    post_Normals_MH = np.concatenate(np.array(post_data_MH.posterior.Normals[0]))
+    post_Unconstrained_MH = np.concatenate(np.array(post_data_MH.posterior.Unconstrained[0]))
+
+    post_Normals_MH_thinned = np.concatenate(np.array(thinned_MH.Normals[0]))
+    post_Unconstrained_MH_thinned = np.concatenate(np.array(thinned_MH.Unconstrained[0]))
+
+    # NUTS
+    post_Normals_NUTS = np.concatenate(np.array(post_data_NUTS.posterior.Normals[0]))
+    post_Unconstrained_NUTS = np.concatenate(np.array(post_data_NUTS.posterior.Unconstrained[0]))
+
+    post_Normals_NUTS_thinned = np.concatenate(np.array(thinned_NUTS.Normals[0]))
+    post_Unconstrained_NUTS_thinned = np.concatenate(np.array(thinned_NUTS.Unconstrained[0]))
+
+    fig = plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_MH), width=0.5, alpha=0.8, color=blue, label='Metropolis-Hastings')
+    plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_NUTS), width=0.5, alpha=0.8, color=orange, label='HMC')
+    plt.fill_between(np.linspace(0, 100, 100), -0.2, 0.2, color='grey', alpha=0.2, zorder=0, linewidth=0)
+    plt.xlabel('Draws')
+    plt.ylabel('Autocorrelation')
+    plt.legend()
+    plt.title('Background')
+    plt.show()
+
+
+    plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_MH_thinned), width=0.5, alpha=0.8, color=blue, label='Metropolis-Hastings, thin: 12')
+    plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_NUTS_thinned), width=0.5, alpha=0.8, color=orange, label='HMC, thin: 6')
+    plt.fill_between(np.linspace(0, 100, 100), -0.2, 0.2, color='grey', alpha=0.2, zorder=0, linewidth=0)
+    plt.xlabel('Draws')
+    plt.ylabel('Autocorrelation')
+    plt.legend()
+    plt.title('Background, thinned chains');
