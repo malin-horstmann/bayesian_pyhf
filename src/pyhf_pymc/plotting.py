@@ -27,7 +27,7 @@ from pyhf_pymc import make_op
 blue = '#1F449C'
 orange = '#E57A77'
 
-def prior_posterior_predictives(model, observed, post_pred, prior_pred):
+def prior_posterior_predictives(model, observed, post_pred, prior_pred, bin_steps):
 
     nBins = len(model.expected_actualdata(model.config.suggested_init()))
 
@@ -40,7 +40,7 @@ def prior_posterior_predictives(model, observed, post_pred, prior_pred):
 
     # Plot means
     plt.scatter(np.linspace(0,nBins-1,nBins), prior_means, color=orange, label='Prior Predictive')
-    plt.scatter(np.linspace(0,nBins-1,nBins), prior_means, color=orange, label='Prior Predictive')
+    plt.scatter(np.linspace(0,nBins-1,nBins), post_means, color=blue, label='Posterior Predictive')
 
     # Plot samples
     for i in range(nBins):
@@ -48,10 +48,10 @@ def prior_posterior_predictives(model, observed, post_pred, prior_pred):
         plt.scatter(np.full(len(post_pred.posterior_predictive.Expected_Data[0].T[i]), i), post_pred.posterior_predictive.Expected_Data[0].T[i], alpha=0.1, color=blue, linewidths=0)
 
     # Plot data
-    plt.scatter(np.arange(nBins), observed, marker='3', c = 'k',s=200, zorder = 999, label = "Data")
+    plt.scatter(np.arange(nBins), observed, marker='P', c = 'k',s=70, zorder = 999, label = "Data")
 
     plt.legend(loc='upper left')
-    plt.xticks(np.arange(nBins))
+    plt.xticks(np.arange(0, nBins, bin_steps))
     plt.xlabel('Bins')
     plt.ylabel('Events')
 
