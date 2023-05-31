@@ -93,7 +93,7 @@ def priors2pymc(prepared_model):
     """
 
     """
-    unconstr_norm1, unconstr_norm2 = [], []
+    unconstr_halfnorm = []
     unconstr_poiss1, unconstr_poiss2 = [], []
     unconstr_pars, norm_pars, poiss_pars = [], [], []
     norm_mu, norm_sigma = [], []
@@ -108,9 +108,8 @@ def priors2pymc(prepared_model):
             sub_dict = prior_dict[key]
 
         ## Unconstrained
-            if sub_dict['type'] == 'unconstrained_normal':
-                unconstr_norm1.append(sub_dict['input'][0])
-                unconstr_norm2.append(sub_dict['input'][1])
+            if sub_dict['type'] == 'unconstrained_halfnormal':
+                unconstr_halfnorm.append(sub_dict['input'][0])
             if sub_dict['type'] == 'unconstrained_poisson':
                 unconstr_poiss1.append(sub_dict['input'][0])
                 unconstr_poiss2.append(sub_dict['input'][1])
@@ -124,11 +123,12 @@ def priors2pymc(prepared_model):
                 poiss_alpha.append(sub_dict['input'][0])
                 poiss_beta.append(sub_dict['input'][1])
 
+        ##
         if np.array(unconstr_poiss1, dtype=object).size != 0:
             unconstr_pars.extend(pm.Gamma('Unconstrained', alpha=list(np.concatenate(unconstr_poiss1)), beta=list(np.concatenate(unconstr_poiss2))))
         
-        if np.array(unconstr_norm1, dtype=object).size != 0:
-            unconstr_pars.extend(pm.Normal('Unconstrained', mu=list(np.concatenate(unconstr_norm1)), sigma=list(np.concatenate(unconstr_norm2))))
+        if np.array(unconstr_halfnorm, dtype=object).size != 0:
+            unconstr_pars.extend(pm.HalfNormal('Unconstrained', sigma=list(np.concatenate(unconstr_halfnorm))))
 
         if np.array(norm_mu, dtype=object).size != 0:
             norm_pars.extend(pm.Normal('Normals', mu=list(np.concatenate(norm_mu)), sigma=list(np.concatenate(norm_sigma))))
