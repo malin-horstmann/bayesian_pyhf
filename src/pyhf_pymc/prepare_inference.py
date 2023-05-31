@@ -9,7 +9,6 @@ def prepare_priors(model, unconstr_dict):
 
     """
 
-    unconstr_mu, unconstr_sigma, norm_mu, norm_sigma, poiss_pars = [], [], [], [], []
     norm_poiss_dict = {}
     ii = 0
     for k,v in model.config.par_map.items():
@@ -72,7 +71,7 @@ def get_target(model):
 
 
 
-def prepare_model(model, observations, priors):
+def prepare_model(model, observations, prior_dict):
     """
     Preparing model for sampling
     Input:
@@ -86,12 +85,16 @@ def prepare_model(model, observations, priors):
     model_dict = {}
     model_dict['model'] = model
     model_dict['obs'] = observations
-    model_dict['priors'] = priors
+    model_dict['priors'] = prior_dict
 
     return model_dict
 
 def priors2pymc(prepared_model):
-    input1, input2 = [], []
+    """
+
+    """
+    unconstr_norm1, unconstr_norm2 = [], []
+    unconstr_poiss1, unconstr_poiss2 = [], []
     unconstr_pars, norm_pars, poiss_pars = [], [], []
     norm_mu, norm_sigma = [], []
     poiss_alpha, poiss_beta = [], []
@@ -105,9 +108,12 @@ def priors2pymc(prepared_model):
             sub_dict = prior_dict[key]
 
         ## Unconstrained
-            if sub_dict['type'] == 'unconstrained':
-                input1.append(sub_dict['input'][0])
-                input2.append(sub_dict['input'][1])
+            if sub_dict['type'] == 'unconstrained_normal':
+                unconstr_norm1.append(sub_dict['input'][0])
+                unconstr_norm2.append(sub_dict['input'][1])
+            if sub_dict['type'] == 'unconstrained_poisson':
+                unconstr_poiss1.append(sub_dict['input'][0])
+                unconstr_poiss2.append(sub_dict['input'][1])
 
         ## Normal and Poisson constraints
             if sub_dict['type'] == 'normal':
@@ -118,8 +124,11 @@ def priors2pymc(prepared_model):
                 poiss_alpha.append(sub_dict['input'][0])
                 poiss_beta.append(sub_dict['input'][1])
 
-        if np.array(input1, dtype=object).size != 0:
-            unconstr_pars.extend(pm.Gamma('Unconstrained', alpha=list(np.concatenate(input1)), beta=list(np.concatenate(input2))))
+        if np.array(unconstr_poiss1, dtype=object).size != 0:
+            unconstr_pars.extend(pm.Gamma('Unconstrained', alpha=list(np.concatenate(unconstr_poiss1)), beta=list(np.concatenate(unconstr_poiss2))))
+        
+        if np.array(unconstr_norm1, dtype=object).size != 0:
+            unconstr_pars.extend(pm.Normal('Unconstrained', mu=list(np.concatenate(unconstr_norm1)), sigma=list(np.concatenate(unconstr_norm2))))
 
         if np.array(norm_mu, dtype=object).size != 0:
             norm_pars.extend(pm.Normal('Normals', mu=list(np.concatenate(norm_mu)), sigma=list(np.concatenate(norm_sigma))))
