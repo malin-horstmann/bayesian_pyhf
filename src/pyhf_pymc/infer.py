@@ -32,7 +32,7 @@ def model(stat_model, unconstrained_priors, data):
     
     '''
     prior_dict = prepare_inference.prepare_priors(stat_model, unconstrained_priors)
-    prepared_model = prepare_inference.prepare_model(model=stat_model, observations=data, priors=prior_dict)
+    prepared_model = prepare_inference.prepare_model(model=stat_model, observations=data, prior_dict=prior_dict)
     expData_op = make_op.make_op(stat_model)
 
     with pm.Model():
