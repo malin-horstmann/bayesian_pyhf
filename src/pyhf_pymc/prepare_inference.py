@@ -4,40 +4,60 @@ import pymc as pm
 from pytensor import tensor as pt
 
 
-def prepare_priors(model, unconstr_dict):
+def build_priorDict(model, unconstr_priors):
     """
+    Builds a combined dictionary of constrained parameters (from the model definition) and 
+    unconstrained parameters (have to be submitted by hand).
 
-    """
+    Args:
+        - model:  pyhf model.
+        - unconstr_priors (dictionary): Dictionary of unconstrained parameters of the form:
+            unconstr_priors = {
+                'mu_poisson': {'type': 'unconstrained_poisson', 'input': [[5.], [1.]]}
+                'mu_halfnormal': {'type': 'unconstrained_halfnormal', 'input': [[0.1]]}
+} 
+    Returns:
+        - prior_dict (dictionary): Dictionary of of all parameter priors.
 
-    norm_poiss_dict = {}
-    ii = 0
+    """ 
+    constrained_priors = {}
+
+    ## Add Normal priors
+    sigma_counter = 0
     for k,v in model.config.par_map.items():
             if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal):
-                a, b  = [], []
 
+                mu, sigma  = [], []
                 for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
-                    a.append(model.config.auxdata[int(i)])
-                    b.append(model.constraint_model.constraints_gaussian.sigmas[ii])
-                    ii = ii + 1
-                norm_poiss_dict[k] = {'type': 'normal', 'input': [a, b]}
+                    mu.append(model.config.auxdata[int(i)])
+                    sigma.append(model.constraint_model.constraints_gaussian.sigmas[sigma_counter])
+                    sigma_counter += 1
 
-    ## Add poisson priors to dictionary
+                constrained_priors[k] = {'type': 'normal', 'input': [mu, sigma]}
+
+    ## Add Poisson priors
     for k,v in model.config.par_map.items():
         if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson):
-            a = []
+            alpha = []
             for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
-                a.append(model.config.auxdata[int(i)]**3)
-            norm_poiss_dict[k] = {'type': 'poisson', 'input': [a, a]}
+                alpha.append(model.config.auxdata[int(i)]**3)
+                beta = alpha
+            constrained_priors[k] = {'type': 'poisson', 'input': [alpha, beta]}
 
-    return {**unconstr_dict, **norm_poiss_dict}
+
+    prior_dict = {**unconstr_priors, **constrained_priors}
+
+    return prior_dict   
+
 
 def get_target(model):
     """
-    Ordering vector for the parameters
-    Input:
-        - pyhf model
-    Output:
-        - index vector
+    Ordering list for the parameters.
+
+    Args:
+        - model: pyhf model.
+    Returns:
+        - target (list): Specifies the position index for each parameter.
     """
 
     target = []
@@ -70,28 +90,14 @@ def get_target(model):
     return target
 
 
-
-def prepare_model(model, observations, prior_dict):
+def priors2pymc(prior_dict):
     """
-    Preparing model for sampling
-    Input:
-        - pyhf model
-        - observarions
-        - dictionary of priors
-    Output:
-        - dictinonary of the model with keys 'model', 'obs', 'priors'
-    """
+    Creates a pytensor object of the parameters for sampling with pyhf
 
-    model_dict = {}
-    model_dict['model'] = model
-    model_dict['obs'] = observations
-    model_dict['priors'] = prior_dict
-
-    return model_dict
-
-def priors2pymc(prepared_model):
-    """
-
+    Args:
+        - model: pyhf model.
+    Returns:
+        - target (list): Specifies the position index for each parameter.
     """
     unconstr_halfnorm = []
     unconstr_poiss1, unconstr_poiss2 = [], []
