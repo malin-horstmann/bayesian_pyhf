@@ -19,6 +19,13 @@ def build_priorDict_alt(model, unconstr_priors):
         - prior_dict (dictionary): Dictionary of of all parameter priors.
     """ 
 
+    # Turn partiotion indices to ints
+    partition_indices = []
+    for array in model.constraint_model.viewer_aux.selected_viewer._partition_indices:
+        array = [int(x) for x in array]
+
+        partition_indices.append(array)
+
     prior_dict = {}
     sigma_counter = 0
 
@@ -44,6 +51,7 @@ def build_priorDict_alt(model, unconstr_priors):
         
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
+
 
 
     return prior_dict
@@ -220,9 +228,6 @@ def priors2pymc_alt(model, prior_dict):
 
             if specs['type'] == 'normal':
                 pars_combined.extend(pm.Normal(name, mu=specs['input'][0], sigma=specs['input'][1]))
-            
-
-
 
         pars_combined = np.array(pars_combined, dtype=object).reshape(-1)
         target = get_target(model)
@@ -230,3 +235,18 @@ def priors2pymc_alt(model, prior_dict):
 
 
         return final
+
+# def priors2pymc_alt1(model, prior_dict):
+#     """
+#     Creates a pytensor object of the parameters for sampling with pyhf
+
+#     Args:
+#         - model: pyhf model.
+#         - prior_dict (dictionary): Dictionary with all parameter priors.
+#     Returns:
+#         - final (list): pt.tensor distribution for each parameter.
+#     """
+
+#     with pm.Model():
+#         for name, specs in prior_dict.items():
+            
