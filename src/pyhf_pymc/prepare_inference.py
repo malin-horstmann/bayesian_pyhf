@@ -3,6 +3,50 @@ import pyhf
 import pymc as pm
 from pytensor import tensor as pt
 
+def build_priorDict_alt(model, unconstr_priors):
+    """
+    Builds a combined dictionary of constrained parameters (from the model definition) and 
+    unconstrained parameters (have to be submitted by hand).
+
+    Args:
+        - model:  pyhf model.
+        - unconstr_priors (dictionary): Dictionary of unconstrained parameters of the form:
+            unconstr_priors = {
+                'mu_poisson': {'type': 'unconstrained_poisson', 'input': [[5.], [1.]]}
+                'mu_halfnormal': {'type': 'unconstrained_halfnormal', 'input': [[0.1]]}
+                } 
+    Returns:
+        - prior_dict (dictionary): Dictionary of of all parameter priors.
+    """ 
+
+    prior_dict = {}
+    sigma_counter = 0
+
+    for key, specs in model.config.par_map.items():
+        if isinstance(specs['paramset'], pyhf.parameters.constrained_by_normal):
+            prior_dict[key] = {}
+            prior_dict[key]['type'] = 'Normal'
+            prior_dict[key]['mu'] = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]
+            
+            sigma = []
+            for i in partition_indices[model.config.auxdata_order.index(key)]:
+                sigma.append(model.constraint_model.constraints_gaussian.sigmas[sigma_counter])
+                sigma_counter += 1
+            
+            prior_dict[key]['sigma'] = sigma
+        
+    
+    
+        if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
+            prior_dict[key] = {}
+            prior_dict[key]['type'] = 'Gamma'
+            prior_dict[key]['alpha_beta'] = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]**3
+        
+        if key in unconstr_priors.keys():
+            prior_dict[key] = unconstr_priors[key]
+
+
+    return prior_dict
 
 def build_priorDict(model, unconstr_priors):
     """
@@ -18,7 +62,6 @@ def build_priorDict(model, unconstr_priors):
                 } 
     Returns:
         - prior_dict (dictionary): Dictionary of of all parameter priors.
-
     """ 
     constrained_priors = {}
 
@@ -41,8 +84,7 @@ def build_priorDict(model, unconstr_priors):
             alpha = []
             for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
                 alpha.append(model.config.auxdata[int(i)]**3)
-                beta = alpha
-            constrained_priors[k] = {'type': 'poisson', 'input': [alpha, beta]}
+            constrained_priors[k] = {'type': 'poisson', 'input': [alpha]}
 
 
     prior_dict = {**unconstr_priors, **constrained_priors}
@@ -99,14 +141,13 @@ def priors2pymc(model, prior_dict):
     Returns:
         - target (list): Specifies the position index for each parameter.
     """
+
     unconstr_halfnorm = []
     unconstr_poiss_alpha, unconstr_poiss_beta = [], []
-    unconstr_pars_HN, unconstr_pars_Poiss, norm_pars, poiss_pars = [], [], [], []
     norm_mu, norm_sigma = [], []
-    poiss_alpha, poiss_beta = [], []
-    # model = prepared_model['model']
-    # obs = prepared_model['obs']
-    # prior_dict = prepared_model['priors']
+    poiss_alpha_beta = []
+
+    unconstr_pars_HN, unconstr_pars_Poiss, norm_pars, poiss_pars = [], [], [], []
 
     with pm.Model():
 
@@ -126,20 +167,21 @@ def priors2pymc(model, prior_dict):
                 norm_sigma.append(sub_dict['input'][1])
 
             if sub_dict['type'] == 'poisson':
-                poiss_alpha.append(sub_dict['input'][0])
-                poiss_beta.append(sub_dict['input'][1])
+                poiss_alpha_beta.append(sub_dict['input'][0])
 
+        # for func_type, name in [(unconstr_halfnorm, 'Unconstrained_HalfNormal')]:
         ##
         if np.array(unconstr_halfnorm, dtype=object).size != 0:
             unconstr_pars_HN.extend(pm.HalfNormal('Unconstrained_HalfNormal', sigma=list(np.concatenate(unconstr_halfnorm))))
-        if np.array(unconstr_halfnorm, dtype=object).size != 0:
+        
+        if np.array(unconstr_poiss_alpha, dtype=object).size != 0:
             unconstr_pars_Poiss.extend(pm.Gamma('Unconstrained_Gamma', alpha=list(np.concatenate(unconstr_poiss_alpha)), beta=list(np.concatenate(unconstr_poiss_beta))))
 
         if np.array(norm_mu, dtype=object).size != 0:
             norm_pars.extend(pm.Normal('Normals', mu=list(np.concatenate(norm_mu)), sigma=list(np.concatenate(norm_sigma))))
 
-        if np.array(poiss_alpha, dtype=object).size != 0:
-            poiss_pars.extend(pm.Gamma('Gammas', alpha=list(np.concatenate(poiss_alpha)), beta=list(np.concatenate(poiss_beta))))
+        if np.array(poiss_alpha_beta, dtype=object).size != 0:
+            poiss_pars.extend(pm.Gamma('Gammas', alpha=list(np.concatenate(poiss_alpha_beta)), beta=list(np.concatenate(poiss_alpha_beta))))
 
         pars = []
         for i in [unconstr_pars_HN, unconstr_pars_Poiss, norm_pars, poiss_pars]:
@@ -149,5 +191,42 @@ def priors2pymc(model, prior_dict):
         pars = np.concatenate(pars)
         target = get_target(model)
         final = pt.as_tensor_variable(pars[target.argsort()].tolist())
+
+        return final
+
+def priors2pymc_alt(model, prior_dict):
+    """
+    Creates a pytensor object of the parameters for sampling with pyhf
+
+    Args:
+        - model: pyhf model.
+        - prior_dict (dictionary): Dictionary with all parameter priors.
+    Returns:
+        - final (list): pt.tensor distribution for each parameter.
+    """
+
+    pars_combined = []
+    with pm.Model():
+        for name, specs in prior_dict.items():
+
+            if specs['type'] == 'unconstrained_halfnormal':
+                pars_combined.extend(pm.HalfNormal(name, sigma=specs['input'][1]))   
+            
+            if specs['type'] == 'unconstrained_poisson':
+                pars_combined.extend(pm.Gamma(name, alpha=specs['input'][0], beta=specs['input'][0]))
+            
+            if specs['type'] == 'poisson':
+                pars_combined.extend(pm.Gamma(name, alpha=specs['input'][0], beta=specs['input'][0]))
+
+            if specs['type'] == 'normal':
+                pars_combined.extend(pm.Normal(name, mu=specs['input'][0], sigma=specs['input'][1]))
+            
+
+
+
+        pars_combined = np.array(pars_combined, dtype=object).reshape(-1)
+        target = get_target(model)
+        final = pt.as_tensor_variable(pars_combined[target.argsort()].tolist())
+
 
         return final
