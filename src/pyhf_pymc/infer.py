@@ -31,12 +31,12 @@ def model(stat_model, unconstrained_priors, data):
     '''
     
     '''
-    prior_dict = prepare_inference.prepare_priors(stat_model, unconstrained_priors)
-    prepared_model = prepare_inference.prepare_model(model=stat_model, observations=data, prior_dict=prior_dict)
+    prior_dict = prepare_inference.build_priorDict(stat_model, unconstrained_priors)
+    # prepared_model = prepare_inference.prepare_model(model=stat_model, observations=data, prior_dict=prior_dict)
     expData_op = make_op.make_op(stat_model)
 
     with pm.Model():
-        pars = prepare_inference.priors2pymc(prepared_model)
+        pars = prepare_inference.priors2pymc(stat_model, prior_dict)
         Expected_Data = pm.Poisson("Expected_Data", mu=expData_op(pars), observed=data)
         yield
         

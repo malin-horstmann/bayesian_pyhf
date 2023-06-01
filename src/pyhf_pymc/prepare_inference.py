@@ -15,7 +15,7 @@ def build_priorDict(model, unconstr_priors):
             unconstr_priors = {
                 'mu_poisson': {'type': 'unconstrained_poisson', 'input': [[5.], [1.]]}
                 'mu_halfnormal': {'type': 'unconstrained_halfnormal', 'input': [[0.1]]}
-} 
+                } 
     Returns:
         - prior_dict (dictionary): Dictionary of of all parameter priors.
 
@@ -90,7 +90,7 @@ def get_target(model):
     return target
 
 
-def priors2pymc(prior_dict):
+def priors2pymc(model, prior_dict):
     """
     Creates a pytensor object of the parameters for sampling with pyhf
 
@@ -100,13 +100,13 @@ def priors2pymc(prior_dict):
         - target (list): Specifies the position index for each parameter.
     """
     unconstr_halfnorm = []
-    unconstr_poiss1, unconstr_poiss2 = [], []
-    unconstr_pars, norm_pars, poiss_pars = [], [], []
+    unconstr_poiss_alpha, unconstr_poiss_beta = [], []
+    unconstr_pars_HN, unconstr_pars_Poiss, norm_pars, poiss_pars = [], [], [], []
     norm_mu, norm_sigma = [], []
     poiss_alpha, poiss_beta = [], []
-    model = prepared_model['model']
-    obs = prepared_model['obs']
-    prior_dict = prepared_model['priors']
+    # model = prepared_model['model']
+    # obs = prepared_model['obs']
+    # prior_dict = prepared_model['priors']
 
     with pm.Model():
 
@@ -117,8 +117,8 @@ def priors2pymc(prior_dict):
             if sub_dict['type'] == 'unconstrained_halfnormal':
                 unconstr_halfnorm.append(sub_dict['input'][0])
             if sub_dict['type'] == 'unconstrained_poisson':
-                unconstr_poiss1.append(sub_dict['input'][0])
-                unconstr_poiss2.append(sub_dict['input'][1])
+                unconstr_poiss_alpha.append(sub_dict['input'][0])
+                unconstr_poiss_beta.append(sub_dict['input'][1])
 
         ## Normal and Poisson constraints
             if sub_dict['type'] == 'normal':
@@ -130,11 +130,10 @@ def priors2pymc(prior_dict):
                 poiss_beta.append(sub_dict['input'][1])
 
         ##
-        if np.array(unconstr_poiss1, dtype=object).size != 0:
-            unconstr_pars.extend(pm.Gamma('Unconstrained', alpha=list(np.concatenate(unconstr_poiss1)), beta=list(np.concatenate(unconstr_poiss2))))
-        
         if np.array(unconstr_halfnorm, dtype=object).size != 0:
-            unconstr_pars.extend(pm.HalfNormal('Unconstrained', sigma=list(np.concatenate(unconstr_halfnorm))))
+            unconstr_pars_HN.extend(pm.HalfNormal('Unconstrained_HalfNormal', sigma=list(np.concatenate(unconstr_halfnorm))))
+        if np.array(unconstr_halfnorm, dtype=object).size != 0:
+            unconstr_pars_Poiss.extend(pm.Gamma('Unconstrained_Gamma', alpha=list(np.concatenate(unconstr_poiss_alpha)), beta=list(np.concatenate(unconstr_poiss_beta))))
 
         if np.array(norm_mu, dtype=object).size != 0:
             norm_pars.extend(pm.Normal('Normals', mu=list(np.concatenate(norm_mu)), sigma=list(np.concatenate(norm_sigma))))
@@ -143,7 +142,7 @@ def priors2pymc(prior_dict):
             poiss_pars.extend(pm.Gamma('Gammas', alpha=list(np.concatenate(poiss_alpha)), beta=list(np.concatenate(poiss_beta))))
 
         pars = []
-        for i in [unconstr_pars, norm_pars, poiss_pars]:
+        for i in [unconstr_pars_HN, unconstr_pars_Poiss, norm_pars, poiss_pars]:
             i = np.array(i)
             if i.size != 0:
                 pars.append(i)
