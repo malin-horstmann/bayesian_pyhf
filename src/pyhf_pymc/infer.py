@@ -37,7 +37,7 @@ def model(stat_model, unconstrained_priors, data):
 
     with pm.Model():
         # pars = prepare_inference.priors2pymc(stat_model, prior_dict)
-        pars = prepare_inference.priors2pymc_alt(stat_model, prior_dict)
+        pars = prepare_inference.priors2pymc(stat_model, prior_dict)
         Expected_Data = pm.Poisson("Expected_Data", mu=expData_op(pars), observed=data)
         yield
         
