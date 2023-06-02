@@ -45,7 +45,55 @@ def build_priorDict(model, unconstr_priors):
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
             prior_dict[key] = {}
             prior_dict[key]['type'] = 'Gamma'
-            prior_dict[key]['alpha_beta'] = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]**3
+            prior_dict[key]['alpha_beta'] = (np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]])**3
+        
+        if key in unconstr_priors.keys():
+            prior_dict[key] = unconstr_priors[key]
+
+    return prior_dict
+
+def build_priorDict_noConj(model, unconstr_priors):
+    """
+    Combined!
+
+    Args:
+        - model:  pyhf model.
+        - unconstr_priors (dictionary): Dictionary of unconstrained parameters of the form:
+            unconstr_priors = {
+                'mu_2': {'type': 'HalfNormal_Unconstrained', 'sigma': [.1]},
+                'mu': {'type': 'Gamma_Unconstrained', 'alpha': [5.], 'beta': [1.]}
+            }
+    Returns:
+        - prior_dict (dictionary): Dictionary of of all parameter priors. Next to the 'name'- and 'type'-keys, the following keys for the constrained
+          parameters depend on the distribution type: Normal ('mu', 'sigma'), HalfNormal ('mu'), Gamma ('alpha_beta')
+    """ 
+
+    # Turn partiotion indices to ints
+    partition_indices = []
+    for array in model.constraint_model.viewer_aux.selected_viewer._partition_indices:
+        array = [int(x) for x in array]
+        partition_indices.append(array)
+
+    prior_dict = {}
+    sigma_counter = 0
+
+    for key, specs in model.config.par_map.items():
+
+        if isinstance(specs['paramset'], pyhf.parameters.constrained_by_normal):
+            prior_dict[key] = {}
+            prior_dict[key]['type'] = 'Normal'
+            prior_dict[key]['mu'] = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]
+            
+            sigma = []
+            for i in partition_indices[model.config.auxdata_order.index(key)]:
+                sigma.append(model.constraint_model.constraints_gaussian.sigmas[sigma_counter])
+                sigma_counter += 1
+            prior_dict[key]['sigma'] = sigma
+    
+        if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
+            prior_dict[key] = {}
+            prior_dict[key]['type'] = 'Gamma'
+            prior_dict[key]['alpha_beta'] = (np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]])**3 - np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]
         
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
@@ -161,3 +209,4 @@ def priors2pymc_combined(model, prior_dict):
         pars_combined = pt.as_tensor_variable(np.array(pars_combined, dtype=object)[target.argsort()].tolist())
     
     return pars_combined
+

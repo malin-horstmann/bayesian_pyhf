@@ -32,11 +32,12 @@ def model(stat_model, unconstrained_priors, data):
     
     '''
     prior_dict = prepare_inference.build_priorDict(stat_model, unconstrained_priors)
-    expData_op = make_op.make_op(stat_model)
+    expData_op = make_op.make_op_Act(stat_model)
 
     with pm.Model():
         pars = prepare_inference.priors2pymc_combined(stat_model, prior_dict)
-        Expected_Data = pm.Poisson("Expected_Data", mu=expData_op(pars), observed=data)
+        # Expected_Data = pm.Poisson("Expected_Data", mu=expData_op(pars), observed=data)
+        Expected_Data = pm.Normal("Expected_Data", mu=expData_op(pars), observed=data)
         yield
         
     return model

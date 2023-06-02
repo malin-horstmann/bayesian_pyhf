@@ -23,9 +23,14 @@ import arviz as az
 
 from pyhf_pymc import prepare_inference
 
-def make_op(model):
+def make_op_Act(model):
     '''
-    
+    Wrapping pyhf's model.expected_actualdata for PyMC.
+
+    Args:
+        - model: pyhf model.
+    Returns:
+        - expData_op (class): Wrapper class for model.expected_actualdata.
     '''
 
     @jax.jit
@@ -77,9 +82,14 @@ def make_op(model):
     return expData_op
     
 
-def make_ActAux_op(model):
+def make_op_ActAux(model):
     '''
-    
+    Wrapping pyhf's model.expected_data for PyMC (i.e. including auxiliary data).
+
+    Args:
+        - model: pyhf model.
+    Returns:
+        - expData_op (class): Wrapper class for model.expected_data.
     '''
 
     @jax.jit
