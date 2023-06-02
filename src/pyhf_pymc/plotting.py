@@ -58,31 +58,31 @@ def prior_posterior_predictives(model, data, post_pred, prior_pred, bin_steps):
     plt.xlabel('Bins')
     plt.ylabel('Events')
 
-def calibration(prepared_model, prior_pred):
+
+def calibration(model, prior_pred, prior_dict):
     '''
     
     '''
     # Sampling
-    model = prepared_model['model']
     expData_op = make_op.make_op(model)
-    prior_Normals, prior_Unconstrained, prior_data = np.concatenate(prior_pred.prior.Normals[0]), np.concatenate(prior_pred.prior.Unconstrained[0]), np.array(prior_pred.prior_predictive.Expected_Data[0])
+    prior_Normals, prior_Unconstrained, prior_data = np.concatenate(prior_pred.prior.Normals[0]), np.concatenate(prior_pred.prior.Gammas[0]), np.array(prior_pred.prior_predictive.Expected_Data[0])
 
     def posterior_from_prior(prior_data):
             with pm.Model() as m:
-                    pars = prepare_inference.priors2pymc(prepared_model)
+                    pars = prepare_inference.priors2pymc(model, prior_dict)
                     Expected_Data = pm.Poisson("Expected_Data", mu=expData_op(pars), observed=prior_data)
                     
                     step1 = pm.Metropolis()
                     post_data = pm.sample(1, chains=1, step=step1)
                     post_pred = pm.sample_posterior_predictive(post_data)
 
-            return np.concatenate(post_data.posterior.Normals[0]), np.concatenate(post_data.posterior.Unconstrained[0]), np.array(post_pred.posterior_predictive.Expected_Data[0][0])
+            return np.concatenate(post_data.posterior.Normals[0]), np.concatenate(post_data.posterior.Gammas[0]), np.array(post_pred.posterior_predictive.Expected_Data[0][0])
                 
-    post_Normals, post_Unconstrained, post_data = [], [], []
+    post_Normals, post_Gammas, post_data = [], [], []
     for p_d in prior_data:
         a, b, c = posterior_from_prior(p_d)
         post_Normals.append(a[0])
-        post_Unconstrained.append(b[0])
+        post_Gammas.append(b[0])
         post_data.append(c[0])
 
     # Plot Normals
@@ -96,9 +96,9 @@ def calibration(prepared_model, prior_pred):
     plt.show()
         
     # Plot Unconstrained 
-    plt.hist(prior_Unconstrained, 40, alpha = 0.5, color=orange, linewidth=2, label='Prior', edgecolor=orange)
-    _, bins, _ = plt.hist(prior_Unconstrained, bins=40, histtype='step', color=orange, alpha=0.000001)
-    plt.hist(post_Unconstrained, bins=bins, alpha = 0.5, color=blue, linewidth=2, label='Posterior', edgecolor=blue)
+    plt.hist(prior_Gammas, 40, alpha = 0.5, color=orange, linewidth=2, label='Prior', edgecolor=orange)
+    _, bins, _ = plt.hist(prior_Gammas, bins=40, histtype='step', color=orange, alpha=0.000001)
+    plt.hist(post_Gammas, bins=bins, alpha = 0.5, color=blue, linewidth=2, label='Posterior', edgecolor=blue)
     plt.xlabel('Signal Strenth')
 
     plt.legend()
@@ -106,6 +106,7 @@ def calibration(prepared_model, prior_pred):
     plt.show()
 
     return post_Normals, post_Unconstrained, post_data
+
 
 def plot_autocorrelation(model, unconstrained_priors, data):
     '''
