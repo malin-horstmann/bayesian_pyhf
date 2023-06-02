@@ -12,11 +12,12 @@ def build_priorDict(model, unconstr_priors):
         - model:  pyhf model.
         - unconstr_priors (dictionary): Dictionary of unconstrained parameters of the form:
             unconstr_priors = {
-                'mu_poisson': {'type': 'unconstrained_poisson', 'input': [[5.], [1.]]}
-                'mu_halfnormal': {'type': 'unconstrained_halfnormal', 'input': [[0.1]]}
-                } 
+                'mu_2': {'type': 'HalfNormal_Unconstrained', 'sigma': [.1]},
+                'mu': {'type': 'Gamma_Unconstrained', 'alpha': [5.], 'beta': [1.]}
+            }
     Returns:
-        - prior_dict (dictionary): Dictionary of of all parameter priors.
+        - prior_dict (dictionary): Dictionary of of all parameter priors. Next to the 'name'- and 'type'-keys, the following keys for the constrained
+          parameters depend on the distribution type: Normal ('mu', 'sigma'), HalfNormal ('mu'), Gamma ('alpha_beta')
     """ 
 
     # Turn partiotion indices to ints
@@ -64,7 +65,6 @@ def get_target(model):
 
     target = []
     unconstr_idx, norm_idx, poiss_idx = [], [], []
-    # norm_poiss_dict = {}
 
     for k, v in model.config.par_map.items():
 
@@ -92,7 +92,6 @@ def get_target(model):
     return target
 
 
-
 def priors2pymc(model, prior_dict):
     """
     Creates a pytensor object of the parameters for sampling with pyhf
@@ -109,8 +108,11 @@ def priors2pymc(model, prior_dict):
     with pm.Model():
         for name, specs in  prior_dict.items():
 
-            if specs['type'] == 'HalfNormal':
+            if specs['type'] == 'HalfNormal_Unconstrained':
                 pars_combined.extend(pm.HalfNormal(name, sigma=specs['sigma']))   
+            
+            if specs['type'] == 'Gamma_Unconstrained':
+                pars_combined.extend(pm.Gamma(name, alpha=specs['alpha'], beta=specs['beta']))
             
             if specs['type'] == 'Normal':
                 pars_combined.extend(pm.Normal(name, mu=specs['mu'], sigma=specs['sigma']))
@@ -119,6 +121,7 @@ def priors2pymc(model, prior_dict):
                 pars_combined.extend(pm.Gamma(name, alpha=specs['alpha_beta'], beta=specs['alpha_beta']))
             
         return pt.as_tensor_variable(pars_combined)
+
 
 def priors2pymc_combined(model, prior_dict):
     """
@@ -130,5 +133,31 @@ def priors2pymc_combined(model, prior_dict):
     Returns:
         - final (list): pt.tensor distribution for each group of parameter types (Normal, Gamma, HalfNormal).
     """
+    with pm.Model():
+        # Assembling the parameters
+        Normal_mu = [specs['mu'] for _, specs in prior_dict.items() if specs['type'] == 'Normal']
+        Normal_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'Normal']
+
+        Gamma_alpha_beta = [specs['alpha_beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma']
+
+        HalfNormal_Unconstr_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'HalfNormal_Unconstrained']
+
+        Gamma_Unconstr_alpa = [specs['alpha'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma_Unconstrained']
+        Gamma_Unconstr_beta = [specs['beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma_Unconstrained']
+
+        # Building the PyMC distributions
+        pymc_Normals = pm.Normal('Normals', mu=np.concatenate(Normal_mu), sigma=np.concatenate(Normal_sigma))
+        pymc_Gammas = pm.Gamma('Gammas', alpha=np.concatenate(Gamma_alpha_beta), beta=np.concatenate(Gamma_alpha_beta))
+        pymc_Unconstr_HalfNormals = pm.HalfNormal('Unconstrained_HalfNormals', sigma=np.concatenate(HalfNormal_Unconstr_sigma))
+        pymc_Unconstr_Gammas = pm.Gamma('Unconstrained_Gammas', alpha=np.concatenate(Gamma_Unconstr_alpa), beta=np.concatenate(Gamma_Unconstr_beta))
+
+        pars_combined = []
+        pars_combined.extend(pymc_Unconstr_HalfNormals)
+        pars_combined.extend(pymc_Unconstr_Gammas)
+        pars_combined.extend(pymc_Normals)
+        pars_combined.extend(pymc_Gammas)
+
+        target = get_target(model)
+        pars_combined = pt.as_tensor_variable(np.array(pars_combined, dtype=object)[target.argsort()].tolist())
     
-    return model
+    return pars_combined
