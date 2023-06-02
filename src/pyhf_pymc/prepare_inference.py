@@ -3,46 +3,68 @@ import pyhf
 import pymc as pm
 from pytensor import tensor as pt
 
-
-def prepare_priors(model, unconstr_dict):
+def build_priorDict(model, unconstr_priors):
     """
+    Builds a combined dictionary of constrained parameters (from the model definition) and 
+    unconstrained parameters (have to be submitted by hand).
 
-    """
+    Args:
+        - model:  pyhf model.
+        - unconstr_priors (dictionary): Dictionary of unconstrained parameters of the form:
+            unconstr_priors = {
+                'mu_2': {'type': 'HalfNormal_Unconstrained', 'sigma': [.1]},
+                'mu': {'type': 'Gamma_Unconstrained', 'alpha': [5.], 'beta': [1.]}
+            }
+    Returns:
+        - prior_dict (dictionary): Dictionary of of all parameter priors. Next to the 'name'- and 'type'-keys, the following keys for the constrained
+          parameters depend on the distribution type: Normal ('mu', 'sigma'), HalfNormal ('mu'), Gamma ('alpha_beta')
+    """ 
 
-    norm_poiss_dict = {}
-    ii = 0
-    for k,v in model.config.par_map.items():
-            if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal):
-                a, b  = [], []
+    # Turn partiotion indices to ints
+    partition_indices = []
+    for array in model.constraint_model.viewer_aux.selected_viewer._partition_indices:
+        array = [int(x) for x in array]
+        partition_indices.append(array)
 
-                for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
-                    a.append(model.config.auxdata[int(i)])
-                    b.append(model.constraint_model.constraints_gaussian.sigmas[ii])
-                    ii = ii + 1
-                norm_poiss_dict[k] = {'type': 'normal', 'input': [a, b]}
+    prior_dict = {}
+    sigma_counter = 0
 
-    ## Add poisson priors to dictionary
-    for k,v in model.config.par_map.items():
-        if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson):
-            a = []
-            for i in model.constraint_model.viewer_aux.selected_viewer._partition_indices[model.config.auxdata_order.index(k)]:
-                a.append(model.config.auxdata[int(i)]**3)
-            norm_poiss_dict[k] = {'type': 'poisson', 'input': [a, a]}
+    for key, specs in model.config.par_map.items():
 
-    return {**unconstr_dict, **norm_poiss_dict}
+        if isinstance(specs['paramset'], pyhf.parameters.constrained_by_normal):
+            prior_dict[key] = {}
+            prior_dict[key]['type'] = 'Normal'
+            prior_dict[key]['mu'] = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]
+            
+            sigma = []
+            for i in partition_indices[model.config.auxdata_order.index(key)]:
+                sigma.append(model.constraint_model.constraints_gaussian.sigmas[sigma_counter])
+                sigma_counter += 1
+            prior_dict[key]['sigma'] = sigma
+    
+        if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
+            prior_dict[key] = {}
+            prior_dict[key]['type'] = 'Gamma'
+            prior_dict[key]['alpha_beta'] = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]**3
+        
+        if key in unconstr_priors.keys():
+            prior_dict[key] = unconstr_priors[key]
+
+    return prior_dict
+
 
 def get_target(model):
     """
-    Ordering vector for the parameters
-    Input:
-        - pyhf model
-    Output:
-        - index vector
+    Ordering list for the parameters.
+
+    Args:
+        - model: pyhf model.
+    Returns:
+        - target (list): Specifies the position index for each parameter.
     """
 
     target = []
     unconstr_idx, norm_idx, poiss_idx = [], [], []
-    # norm_poiss_dict = {}
 
     for k, v in model.config.par_map.items():
 
@@ -70,79 +92,72 @@ def get_target(model):
     return target
 
 
-
-def prepare_model(model, observations, prior_dict):
+def priors2pymc(model, prior_dict):
     """
-    Preparing model for sampling
-    Input:
-        - pyhf model
-        - observarions
-        - dictionary of priors
-    Output:
-        - dictinonary of the model with keys 'model', 'obs', 'priors'
-    """
+    Creates a pytensor object of the parameters for sampling with pyhf
 
-    model_dict = {}
-    model_dict['model'] = model
-    model_dict['obs'] = observations
-    model_dict['priors'] = prior_dict
-
-    return model_dict
-
-def priors2pymc(prepared_model):
+    Args:
+        - model: pyhf model.
+        - prior_dict (dictionary): Dictionary with all parameter priors.
+    Returns:
+        - final (list): pt.tensor distribution for each parameter.
     """
 
-    """
-    unconstr_halfnorm = []
-    unconstr_poiss1, unconstr_poiss2 = [], []
-    unconstr_pars, norm_pars, poiss_pars = [], [], []
-    norm_mu, norm_sigma = [], []
-    poiss_alpha, poiss_beta = [], []
-    model = prepared_model['model']
-    obs = prepared_model['obs']
-    prior_dict = prepared_model['priors']
+    pars_combined = []
 
     with pm.Model():
+        for name, specs in  prior_dict.items():
 
-        for key in prior_dict.keys():
-            sub_dict = prior_dict[key]
+            if specs['type'] == 'HalfNormal_Unconstrained':
+                pars_combined.extend(pm.HalfNormal(name, sigma=specs['sigma']))   
+            
+            if specs['type'] == 'Gamma_Unconstrained':
+                pars_combined.extend(pm.Gamma(name, alpha=specs['alpha'], beta=specs['beta']))
+            
+            if specs['type'] == 'Normal':
+                pars_combined.extend(pm.Normal(name, mu=specs['mu'], sigma=specs['sigma']))
+            
+            if specs['type'] == 'Gamma':
+                pars_combined.extend(pm.Gamma(name, alpha=specs['alpha_beta'], beta=specs['alpha_beta']))
+            
+        return pt.as_tensor_variable(pars_combined)
 
-        ## Unconstrained
-            if sub_dict['type'] == 'unconstrained_halfnormal':
-                unconstr_halfnorm.append(sub_dict['input'][0])
-            if sub_dict['type'] == 'unconstrained_poisson':
-                unconstr_poiss1.append(sub_dict['input'][0])
-                unconstr_poiss2.append(sub_dict['input'][1])
 
-        ## Normal and Poisson constraints
-            if sub_dict['type'] == 'normal':
-                norm_mu.append(sub_dict['input'][0])
-                norm_sigma.append(sub_dict['input'][1])
+def priors2pymc_combined(model, prior_dict):
+    """
+    Creates a pytensor object of the parameters for sampling with pyhf
 
-            if sub_dict['type'] == 'poisson':
-                poiss_alpha.append(sub_dict['input'][0])
-                poiss_beta.append(sub_dict['input'][1])
+    Args:
+        - model: pyhf model.
+        - prior_dict (dictionary): Dictionary with all parameter priors.
+    Returns:
+        - final (list): pt.tensor distribution for each group of parameter types (Normal, Gamma, HalfNormal).
+    """
+    with pm.Model():
+        # Assembling the parameters
+        Normal_mu = [specs['mu'] for _, specs in prior_dict.items() if specs['type'] == 'Normal']
+        Normal_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'Normal']
 
-        ##
-        if np.array(unconstr_poiss1, dtype=object).size != 0:
-            unconstr_pars.extend(pm.Gamma('Unconstrained', alpha=list(np.concatenate(unconstr_poiss1)), beta=list(np.concatenate(unconstr_poiss2))))
-        
-        if np.array(unconstr_halfnorm, dtype=object).size != 0:
-            unconstr_pars.extend(pm.HalfNormal('Unconstrained', sigma=list(np.concatenate(unconstr_halfnorm))))
+        Gamma_alpha_beta = [specs['alpha_beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma']
 
-        if np.array(norm_mu, dtype=object).size != 0:
-            norm_pars.extend(pm.Normal('Normals', mu=list(np.concatenate(norm_mu)), sigma=list(np.concatenate(norm_sigma))))
+        HalfNormal_Unconstr_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'HalfNormal_Unconstrained']
 
-        if np.array(poiss_alpha, dtype=object).size != 0:
-            poiss_pars.extend(pm.Gamma('Gammas', alpha=list(np.concatenate(poiss_alpha)), beta=list(np.concatenate(poiss_beta))))
+        Gamma_Unconstr_alpa = [specs['alpha'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma_Unconstrained']
+        Gamma_Unconstr_beta = [specs['beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma_Unconstrained']
 
-        pars = []
-        for i in [unconstr_pars, norm_pars, poiss_pars]:
-            i = np.array(i)
-            if i.size != 0:
-                pars.append(i)
-        pars = np.concatenate(pars)
+        # Building the PyMC distributions
+        pymc_Normals = pm.Normal('Normals', mu=np.concatenate(Normal_mu), sigma=np.concatenate(Normal_sigma))
+        pymc_Gammas = pm.Gamma('Gammas', alpha=np.concatenate(Gamma_alpha_beta), beta=np.concatenate(Gamma_alpha_beta))
+        pymc_Unconstr_HalfNormals = pm.HalfNormal('Unconstrained_HalfNormals', sigma=np.concatenate(HalfNormal_Unconstr_sigma))
+        pymc_Unconstr_Gammas = pm.Gamma('Unconstrained_Gammas', alpha=np.concatenate(Gamma_Unconstr_alpa), beta=np.concatenate(Gamma_Unconstr_beta))
+
+        pars_combined = []
+        pars_combined.extend(pymc_Unconstr_HalfNormals)
+        pars_combined.extend(pymc_Unconstr_Gammas)
+        pars_combined.extend(pymc_Normals)
+        pars_combined.extend(pymc_Gammas)
+
         target = get_target(model)
-        final = pt.as_tensor_variable(pars[target.argsort()].tolist())
-
-        return final
+        pars_combined = pt.as_tensor_variable(np.array(pars_combined, dtype=object)[target.argsort()].tolist())
+    
+    return pars_combined
