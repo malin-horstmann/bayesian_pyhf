@@ -50,6 +50,12 @@ def build_priorDict_conjugate(model, unconstr_priors):
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
 
+    # Test
+    try:
+        assert prior_dict.keys() == model.config.par_map.keys()
+    except:
+        raise ValueError('Order of parameters is different from model.config.par_map.')
+
     return prior_dict
 
 def build_priorDict_combined(model, unconstr_priors):
@@ -98,6 +104,12 @@ def build_priorDict_combined(model, unconstr_priors):
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
 
+    # Test
+    try:
+        assert prior_dict.keys() == model.config.par_map.keys()
+    except:
+        raise ValueError('Order of parameters is different from model.config.par_map.')
+
     return prior_dict
 
 
@@ -142,7 +154,7 @@ def get_target(model):
 
 def priors2pymc(model, prior_dict):
     """
-    Creates a pytensor object of the parameters for sampling with pyhf
+    Creates a unique pytensor pdf for each parameter. 
 
     Args:
         - model: pyhf model.
@@ -167,13 +179,21 @@ def priors2pymc(model, prior_dict):
             
             if specs['type'] == 'Gamma':
                 pars_combined.extend(pm.Gamma(name, alpha=specs['alpha_beta'], beta=specs['alpha_beta']))
-            
-        return pt.as_tensor_variable(pars_combined)
+    
+    # Test
+    try:
+        assert len(pars_combined) == len(model.config.suggested_init())
+    except:
+        raise ValueError('Number of parameters is incorrect.')
+
+    pars_combined = pt.as_tensor_variable(pars_combined)
+       
+    return pars_combined
 
 
 def priors2pymc_combined(model, prior_dict):
     """
-    Creates a pytensor object of the parameters for sampling with pyhf
+    Creates a pytensor pdf for each parameter. Alike pdfs are combined.
 
     Args:
         - model: pyhf model.
@@ -205,8 +225,16 @@ def priors2pymc_combined(model, prior_dict):
         pars_combined.extend(pymc_Normals)
         pars_combined.extend(pymc_Gammas)
 
+        # Test
+        try:
+            assert len(pars_combined) == len(model.config.suggested_init())
+        except:
+            raise ValueError('Number of parameters is incorrect.')
+
         target = get_target(model)
         pars_combined = pt.as_tensor_variable(np.array(pars_combined, dtype=object)[target.argsort()].tolist())
+
+
     
     return pars_combined
 
