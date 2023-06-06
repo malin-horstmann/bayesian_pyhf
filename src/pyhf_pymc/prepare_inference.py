@@ -3,7 +3,7 @@ import pyhf
 import pymc as pm
 from pytensor import tensor as pt
 
-def build_priorDict(model, unconstr_priors):
+def build_priorDict_conjugate(model, unconstr_priors):
     """
     Builds a combined dictionary of constrained parameters (from the model definition) and 
     unconstrained parameters (have to be submitted by hand).
@@ -52,9 +52,9 @@ def build_priorDict(model, unconstr_priors):
 
     return prior_dict
 
-def build_priorDict_noConj(model, unconstr_priors):
+def build_priorDict_combined(model, unconstr_priors):
     """
-    Combined!
+    Combined! I.e. Ur-Priors
 
     Args:
         - model:  pyhf model.
