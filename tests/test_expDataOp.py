@@ -43,22 +43,17 @@ def model():
     return model
 
 @pytest.fixture
-def priorDict_conjugate(model):
-    unconstr_priors = {'my_shapefactor': {'type': 'HalfNormal_Unconstrained', 'sigma': [.1]}, 
-    'mu': {'type': 'Gamma_Unconstrained', 'alpha': [5.], 'beta': [1.]}} 
-
-    return prepare_inference.build_priorDict_conjugate(model, unconstr_priors)
+def Op_Act(model):
+    return make_op.makeOp_Act(model)
 
 @pytest.fixture
-def priorDict_combined(model):
-    unconstr_priors = {'my_shapefactor': {'type': 'HalfNormal_Unconstrained', 'sigma': [.1]}, 
-    'mu': {'type': 'Gamma_Unconstrained', 'alpha': [5.], 'beta': [1.]}} 
+def Op_Aux(model):
+    return make_op.makeOp_Aux(model)
 
-    return prepare_inference.build_priorDict_combined(model, unconstr_priors)
 
-class TestPriorDicts:
-    def test_PriorDict_conjugate(self, model, priorDict_conjugate):
-        assert list(priorDict_conjugate.keys()) == list(model.config.par_map.keys())
-    
-    def test_PriorDict_combined(self, model, priorDict_combined):
-        assert list(priorDict_combined.keys()) == list(model.config.par_map.keys())
+class TestOps():
+    def test_ActOp(self, model, Op_Act):
+        assert (model.expected_actualdata(model.config.suggested_init()) == Op_Act(pt.as_tensor_variable(model.config.suggested_init())).eval()).all()
+
+    def test_AuxOp(self, model, Op_Aux):
+        assert (model.expected_auxdata(model.config.suggested_init()) == Op_Aux(pt.as_tensor_variable(model.config.suggested_init())).eval()).all()
