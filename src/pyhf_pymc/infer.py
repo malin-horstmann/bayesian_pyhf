@@ -35,7 +35,9 @@ def model_conjugate(stat_model, unconstrained_priors, data):
     expData_op_Act = make_op.makeOp_Act(stat_model)
 
     with pm.Model():
-        pars_conjugate = prepare_inference.priors2pymc_combined(stat_model, priorDict_conjugate)
+        # pars_conjugate = prepare_inference.priors2pymc_combined(stat_model, priorDict_conjugate)
+        pars_conjugate = prepare_inference.priors2pymc(stat_model, priorDict_conjugate)
+        
         Expected_Data = pm.Poisson("Expected_Data", mu=expData_op_Act(pars_conjugate), observed=data)
         yield
         
@@ -52,6 +54,7 @@ def model_combined(stat_model, unconstrained_priors, data, auxdata):
     expData_op_Aux = make_op.makeOp_Aux(stat_model)
 
     with pm.Model():
+        # pars_combined = prepare_inference.priors2pymc_combined(stat_model, priorDict_combined)
         pars_combined = prepare_inference.priors2pymc(stat_model, priorDict_combined)
 
         Expected_ActData = pm.Poisson("Expected_ActData", mu=expData_op_Act(pars_combined), observed=data)
@@ -60,21 +63,4 @@ def model_combined(stat_model, unconstrained_priors, data, auxdata):
         
     return model_combined
 
-
-# @contextmanager
-# def model_combined_1Op(stat_model, unconstrained_priors, data):
-#     '''
-    
-#     '''
-#     priorDict_combined = prepare_inference.build_priorDict_combined(stat_model, unconstrained_priors)
-
-#     expData_op = make_op.makeOp_ActAndAux(stat_model)
-
-#     with pm.Model():
-#         pars_combined = prepare_inference.priors2pymc(stat_model, priorDict_combined)
-
-#         Expected_ActData = pm.Normal("Expected_Data", mu=expData_op(pars_combined), observed=data)
-#         yield
-        
-#     return model_combined_1Op
 
