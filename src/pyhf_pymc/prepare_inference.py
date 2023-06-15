@@ -50,6 +50,12 @@ def build_priorDict_conjugate(model, unconstr_priors):
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
 
+    # Test
+    try:
+        assert prior_dict.keys() == model.config.par_map.keys()
+    except:
+        raise ValueError('Order of parameters is different from model.config.par_map.')
+
     return prior_dict
 
 def build_priorDict_combined(model, unconstr_priors):
@@ -68,7 +74,7 @@ def build_priorDict_combined(model, unconstr_priors):
           parameters depend on the distribution type: Normal ('mu', 'sigma'), HalfNormal ('mu'), Gamma ('alpha_beta')
     """ 
 
-    # Turn partiotion indices to ints
+    # Turn partition indices to ints
     partition_indices = []
     for array in model.constraint_model.viewer_aux.selected_viewer._partition_indices:
         array = [int(x) for x in array]
@@ -97,6 +103,12 @@ def build_priorDict_combined(model, unconstr_priors):
         
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
+
+    # Test
+    try:
+        assert prior_dict.keys() == model.config.par_map.keys()
+    except:
+        raise ValueError('Order of parameters is different from model.config.par_map.')
 
     return prior_dict
 
@@ -142,7 +154,7 @@ def get_target(model):
 
 def priors2pymc(model, prior_dict):
     """
-    Creates a pytensor object of the parameters for sampling with pyhf
+    Creates a unique pytensor pdf for each parameter. 
 
     Args:
         - model: pyhf model.
@@ -167,13 +179,21 @@ def priors2pymc(model, prior_dict):
             
             if specs['type'] == 'Gamma':
                 pars_combined.extend(pm.Gamma(name, alpha=specs['alpha_beta'], beta=specs['alpha_beta']))
-            
-        return pt.as_tensor_variable(pars_combined)
+    
+    # Test
+    try:
+        assert len(pars_combined) == len(model.config.suggested_init())
+    except:
+        raise ValueError('Number of parameters is incorrect.')
+
+    pars_combined = pt.as_tensor_variable(pars_combined)
+       
+    return pars_combined
 
 
 def priors2pymc_combined(model, prior_dict):
     """
-    Creates a pytensor object of the parameters for sampling with pyhf
+    Creates a pytensor pdf for each parameter. Alike pdfs are combined.
 
     Args:
         - model: pyhf model.
@@ -194,19 +214,28 @@ def priors2pymc_combined(model, prior_dict):
         Gamma_Unconstr_beta = [specs['beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma_Unconstrained']
 
         # Building the PyMC distributions
-        pymc_Normals = pm.Normal('Normals', mu=np.concatenate(Normal_mu), sigma=np.concatenate(Normal_sigma))
-        pymc_Gammas = pm.Gamma('Gammas', alpha=np.concatenate(Gamma_alpha_beta), beta=np.concatenate(Gamma_alpha_beta))
-        pymc_Unconstr_HalfNormals = pm.HalfNormal('Unconstrained_HalfNormals', sigma=np.concatenate(HalfNormal_Unconstr_sigma))
-        pymc_Unconstr_Gammas = pm.Gamma('Unconstrained_Gammas', alpha=np.concatenate(Gamma_Unconstr_alpa), beta=np.concatenate(Gamma_Unconstr_beta))
-
         pars_combined = []
-        pars_combined.extend(pymc_Unconstr_HalfNormals)
-        pars_combined.extend(pymc_Unconstr_Gammas)
-        pars_combined.extend(pymc_Normals)
-        pars_combined.extend(pymc_Gammas)
+        if len(HalfNormal_Unconstr_sigma) != 0:
+            pymc_Unconstr_HalfNormals = pm.HalfNormal('Unconstrained_HalfNormals', sigma=np.concatenate(HalfNormal_Unconstr_sigma))
+            pars_combined.extend(pymc_Unconstr_HalfNormals)
+        if len(Gamma_Unconstr_alpa) != 0:
+            pymc_Unconstr_Gammas = pm.Gamma('Unconstrained_Gammas', alpha=np.concatenate(Gamma_Unconstr_alpa), beta=np.concatenate(Gamma_Unconstr_beta))
+            pars_combined.extend(pymc_Unconstr_Gammas)
+        if len(Normal_mu) != 0:
+            pymc_Normals = pm.Normal('Normals', mu=np.concatenate(Normal_mu), sigma=np.concatenate(Normal_sigma))
+            pars_combined.extend(pymc_Normals)
+        if len(Gamma_alpha_beta) != 0:  
+            pymc_Gammas = pm.Gamma('Gammas', alpha=np.concatenate(Gamma_alpha_beta), beta=np.concatenate(Gamma_alpha_beta))
+            pars_combined.extend(pymc_Gammas)
+
+        # Test
+        try:
+            assert len(pars_combined) == len(model.config.suggested_init())
+        except:
+            raise ValueError('Number of parameters is incorrect.')
 
         target = get_target(model)
         pars_combined = pt.as_tensor_variable(np.array(pars_combined, dtype=object)[target.argsort()].tolist())
-    
+
     return pars_combined
 

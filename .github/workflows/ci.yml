@@ -56,8 +56,14 @@ jobs:
     - name: List installed Python packages
       run: python -m pip list
 
-    - name: Run sampling notebooks
+    # - name: Run sampling notebooks
+    #   run: |
+    #     cd examples
+    #     # jupyter execute sampling.ipynb
+    #     ls -lhtra
+
+    - name: Test with pytest and coverage
       run: |
-        cd examples
-        # jupyter execute sampling.ipynb
-        ls -lhtra
+        pytest tests
+        pytest --cov=src/pyhf_pymc tests/
+
