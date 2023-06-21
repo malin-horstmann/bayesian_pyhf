@@ -179,6 +179,9 @@ def priors2pymc(model, prior_dict):
             
             if specs['type'] == 'Gamma':
                 pars_combined.extend(pm.Gamma(name, alpha=specs['alpha_beta'], beta=specs['alpha_beta']))
+                
+            if specs['type'] == 'Uniform':
+                pars_combined.extend(pm.Uniform(name, lower=specs['lower'], upper=specs['upper']))
     
     # Test
     try:
