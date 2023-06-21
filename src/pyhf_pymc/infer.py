@@ -54,8 +54,8 @@ def model_combined(stat_model, unconstrained_priors, data, auxdata):
     expData_op_Aux = make_op.makeOp_Aux(stat_model)
 
     with pm.Model():
-        # pars_combined = prepare_inference.priors2pymc_combined(stat_model, priorDict_combined)
-        pars_combined = prepare_inference.priors2pymc(stat_model, priorDict_combined)
+        pars_combined = prepare_inference.priors2pymc_combined(stat_model, priorDict_combined)
+        # pars_combined = prepare_inference.priors2pymc(stat_model, priorDict_combined)
 
         Expected_ActData = pm.Poisson("Expected_ActData", mu=expData_op_Act(pars_combined), observed=data)
         Expected_AuxData = pm.Normal("Expected_AuxData", mu=expData_op_Aux(pars_combined), observed=auxdata)

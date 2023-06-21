@@ -235,25 +235,89 @@ def priors2pymc_combined(model, prior_dict):
         - final (list): pt.tensor distribution for each group of parameter types (Normal, Gamma, HalfNormal).
     """
     with pm.Model():
-        # Assembling the parameters
+        # Constrained
         Normal_mu = [specs['mu'] for _, specs in prior_dict.items() if specs['type'] == 'Normal']
         Normal_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'Normal']
 
         Gamma_alpha_beta = [specs['alpha_beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma']
 
+        # Unconstrained
+        Beta_Unconstr_alpha = [specs['alpha'] for _, specs in prior_dict.items() if specs['type'] == 'Beta_Unconstrained']
+        Beta_Unconstr_beta = [specs['beta'] for _, specs in prior_dict.items() if specs['type'] == 'Beta_Unconstrained']
+
+        Cauchy_Unconstr_alpha = [specs['alpha'] for _, specs in prior_dict.items() if specs['type'] == 'Cauchy_Unconstrained']
+        Cauchy_Unconstr_beta = [specs['beta'] for _, specs in prior_dict.items() if specs['type'] == 'Cauchy_Unconstrained']
+
+        ExGaussian_Unconstr_mu = [specs['mu'] for _, specs in prior_dict.items() if specs['type'] == 'ExGaussian_Unconstrained']
+        ExGaussian_Unconstr_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'ExGaussian_Unconstrained']
+        ExGaussian_Unconstr_nu = [specs['nu'] for _, specs in prior_dict.items() if specs['type'] == 'ExGaussian_Unconstrained']
+
+        Exponential_Unconstr_lam = [specs['lam'] for _, specs in prior_dict.items() if specs['type'] == 'Exponential_Unconstrained']
+
+        Gamma_Unconstr_alpha = [specs['alpha'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma_Unconstrained']
+        Gamma_Unconstr_beta = [specs['beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma_Unconstrained']
+        
         HalfNormal_Unconstr_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'HalfNormal_Unconstrained']
 
-        Gamma_Unconstr_alpa = [specs['alpha'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma_Unconstrained']
-        Gamma_Unconstr_beta = [specs['beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma_Unconstrained']
+        InverseGamma_Unconstr_alpha = [specs['alpha'] for _, specs in prior_dict.items() if specs['type'] == 'InverseGamma_Unconstrained']
+        InverseGamma_Unconstr_beta = [specs['beta'] for _, specs in prior_dict.items() if specs['type'] == 'InverseGamma_Unconstrained']
+        
+        Laplace_Unconstr_mu = [specs['mu'] for _, specs in prior_dict.items() if specs['type'] == 'Laplace_Unconstrained']
+        Laplace_Unconstr_b = [specs['b'] for _, specs in prior_dict.items() if specs['type'] == 'Laplace_Unconstrained']
+
+        LogNormal_Unconstr_mu = [specs['mu'] for _, specs in prior_dict.items() if specs['type'] == 'LogNormal_Unconstrained']
+        LogNormal_Unconstr_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'LogNormal_Unconstrained']
+
+        Logistic_Unconstr_mu = [specs['mu'] for _, specs in prior_dict.items() if specs['type'] == 'Logistic_Unconstrained']
+        Logistic_Unconstr_scale = [specs['scale'] for _, specs in prior_dict.items() if specs['type'] == 'Logistic_Unconstrained']
+
+        Normal_Unconstr_mu = [specs['mu'] for _, specs in prior_dict.items() if specs['type'] == 'Normal_Unconstrained']
+        Normal_Unconstr_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'Normal_Unconstrained']
+
+        Uniform_Unconstr_lower = [specs['lower'] for _, specs in prior_dict.items() if specs['type'] == 'Uniform_Unconstrained']
+        Uniform_Unconstr_upper = [specs['upper'] for _, specs in prior_dict.items() if specs['type'] == 'Uniform_Unconstrained']
+
 
         # Building the PyMC distributions
         pars_combined = []
+        if len(Beta_Unconstr_alpha) != 0:
+            pymc_Unconstr_Betas = pm.Beta('Unconstrained_Betas', alpha=np.concatenate(Beta_Unconstr_alpha), beta=np.concatenate(Beta_Unconstr_beta))
+            pars_combined.extend(pymc_Unconstr_Betas)
+        if len(Cauchy_Unconstr_alpha) != 0:
+            pymc_Unconstr_Cauchys = pm.Cauchy('Unconstrained_Cauchys', alpha=np.concatenate(Cauchy_Unconstr_alpha), beta=np.concatenate(Cauchy_Unconstr_beta))
+            pars_combined.extend(pymc_Unconstr_Cauchys)
+        if len(Exponential_Unconstr_lam) != 0:
+            pymc_Unconstr_Exponentials = pm.Exponential('Unconstrained_Exponentials', lam=np.concatenate(Exponentials_Unconstr_lam))
+            pars_combined.extend(pymc_Unconstr_Exponentials)
+        if len(ExGaussian_Unconstr_sigma) != 0:
+            pymc_Unconstr_ExGaussians = pm.ExGaussian('Unconstrained_ExGaussians', mu=np.concatenate(ExGaussian_Unconstr_mu), sigma=np.concatenate(ExGaussian_Unconstr_sigma), nu=np.concatenate(ExGaussian_Unconstr_nu))
+            pars_combined.extend(pymc_Unconstr_ExGaussians)
+        if len(Gamma_Unconstr_alpha) != 0:
+            pymc_Unconstr_Gammas = pm.Gamma('Unconstrained_Gammas', alpha=np.concatenate(Gamma_Unconstr_alpha), beta=np.concatenate(Gamma_Unconstr_beta))
+            pars_combined.extend(pymc_Unconstr_Gammas)
         if len(HalfNormal_Unconstr_sigma) != 0:
             pymc_Unconstr_HalfNormals = pm.HalfNormal('Unconstrained_HalfNormals', sigma=np.concatenate(HalfNormal_Unconstr_sigma))
             pars_combined.extend(pymc_Unconstr_HalfNormals)
-        if len(Gamma_Unconstr_alpa) != 0:
-            pymc_Unconstr_Gammas = pm.Gamma('Unconstrained_Gammas', alpha=np.concatenate(Gamma_Unconstr_alpa), beta=np.concatenate(Gamma_Unconstr_beta))
-            pars_combined.extend(pymc_Unconstr_Gammas)
+        if len(InverseGamma_Unconstr_alpha) != 0:
+            pymc_Unconstr_InverseGammas = pm.InverseGamma('Unconstrained_InverseGammas', alpha=np.concatenate(InverseGamma_Unconstr_alpha), beta=np.concatenate(InverseGamma_Unconstr_beta))
+            pars_combined.extend(pymc_Unconstr_InverseGammas)
+        if len(Laplace_Unconstr_mu) != 0:
+            pymc_Unconstr_Laplaces = pm.Laplace('Unconstrained_Laplaces', mu=np.concatenate(Laplace_Unconstr_mu), b=np.concatenate(Laplace_Unconstr_b))
+            pars_combined.extend(pymc_Unconstr_Laplaces)
+        if len(LogNormal_Unconstr_sigma) != 0:
+            pymc_Unconstr_LogNormals = pm.LogNormal('Unconstrained_LogNormals', mu=np.concatenate(LogNormal_Unconstr_mu), sigma=np.concatenate(LogNormal_Unconstr_sigma))
+            pars_combined.extend(pymc_Unconstr_LogNormals)
+        if len(Logistic_Unconstr_scale) != 0:
+            pymc_Unconstr_Logistics = pm.Logistic('Unconstrained_Logstics', mu=np.concatenate(Logistic_Unconstr_mu), s=np.concatenate(Logistic_Unconstr_scale))
+            pars_combined.extend(pymc_Unconstr_Logistics)
+        if len(Normal_Unconstr_sigma) != 0:
+            pymc_Unconstr_Normals = pm.Normal('Unconstrained_Normals', mu=np.concatenate(Normal_Unconstr_mu), sigma=np.concatenate(Normal_Unconstr_sigma))
+            pars_combined.extend(pymc_Unconstr_Normals)
+        if len(Uniform_Unconstr_upper) != 0:
+            pymc_Unconstr_Uniforms = pm.Uniform('Unconstrained_Uniforms', upper=np.concatenate(Uniform_Unconstr_upper), lower=np.concatenate(Uniform_Unconstr_lower))
+            pars_combined.extend(pymc_Unconstr_Uniforms)
+
+        # Unconstrained
         if len(Normal_mu) != 0:
             pymc_Normals = pm.Normal('Normals', mu=np.concatenate(Normal_mu), sigma=np.concatenate(Normal_sigma))
             pars_combined.extend(pymc_Normals)
