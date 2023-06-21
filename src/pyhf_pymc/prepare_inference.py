@@ -168,20 +168,50 @@ def priors2pymc(model, prior_dict):
     with pm.Model():
         for name, specs in  prior_dict.items():
 
-            if specs['type'] == 'HalfNormal_Unconstrained':
-                pars_combined.extend(pm.HalfNormal(name, sigma=specs['sigma']))   
+            # Unconstrained
+            if specs['type'] == 'Beta_Unconstrained':
+                pars_combined.extend(pm.Beta(name, alpha=specs['alpha'], beta=specs['beta']))
             
+            if specs['type'] == 'Cauchy_Unconstrained':
+                pars_combined.extend(pm.Beta(name, alpha=specs['alpha'], beta=specs['beta']))
+
+            if specs['type'] == 'ExGaussian_Unconstrained':
+                pars_combined.extend(pm.ExGaussian(name, mu=specs['mu'], sigma=specs['sigma'], nu=specs['nu']))
+
+            if specs['type'] == 'Exponential_Unconstrained':
+                pars_combined.extend(pm.Exponential(name, lam=specs['lam']))
+
             if specs['type'] == 'Gamma_Unconstrained':
                 pars_combined.extend(pm.Gamma(name, alpha=specs['alpha'], beta=specs['beta']))
             
+            if specs['type'] == 'HalfNormal_Unconstrained':
+                pars_combined.extend(pm.HalfNormal(name, sigma=specs['sigma'])) 
+
+            if specs['type'] == 'InverseGamma_Unconstrained':
+                pars_combined.extend(pm.InverseGamma(name, alpha=specs['alpha'], beta=specs['beta']))
+
+            if specs['type'] == 'Laplace_Unconstrained':
+                pars_combined.extend(pm.Laplace(name, mu=specs['mu'], b=specs['b']))
+
+            if specs['type'] == 'Logistic_Unconstrained':
+                pars_combined.extend(pm.Logistic(name, mu=specs['mu'], s=specs['scale']))
+
+            if specs['type'] == 'LogNormal_Unconstrained':
+                pars_combined.extend(pm.LogNormal(name, mu=specs['mu'], sigma=specs['sigma']))
+
+            if specs['type'] == 'Normal_Unconstrained':
+                pars_combined.extend(pm.Normal(name, mu=specs['mu'], sigma=specs['sigma']))
+                            
+            if specs['type'] == 'Uniform_Unconstrained':
+                pars_combined.extend(pm.Uniform(name, lower=specs['lower'], upper=specs['upper']))
+            
+            # Constrained
             if specs['type'] == 'Normal':
                 pars_combined.extend(pm.Normal(name, mu=specs['mu'], sigma=specs['sigma']))
             
             if specs['type'] == 'Gamma':
                 pars_combined.extend(pm.Gamma(name, alpha=specs['alpha_beta'], beta=specs['alpha_beta']))
-                
-            if specs['type'] == 'Uniform':
-                pars_combined.extend(pm.Uniform(name, lower=specs['lower'], upper=specs['upper']))
+
     
     # Test
     try:
