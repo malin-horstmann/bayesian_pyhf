@@ -30,7 +30,15 @@ from contextlib import contextmanager
 @contextmanager
 def model_conjugate(stat_model, unconstrained_priors, data):
     '''
-    
+    Builds a context with the pyhf model set up as data-generating model. The priors for the constrained parameters 
+    have already been updated using conjugate priors.
+
+    Args:
+        - stat_model: pyhf model.
+        - unconstrained_priors (dictionary): Dictionary of all unconstrained priors.
+        - data (list or array): Observations used for the inference step.
+    Returns:
+        - model_combined (context): Context in which PyMC methods can be used.
     '''
     priorDict_conjugate = prepare_inference.build_priorDict_conjugate(stat_model, unconstrained_priors)
     expData_op_Act = make_op.makeOp_Act(stat_model)
@@ -47,7 +55,16 @@ def model_conjugate(stat_model, unconstrained_priors, data):
 @contextmanager
 def model_combined(stat_model, unconstrained_priors, data, auxdata):
     '''
-    
+    Builds a context with the pyhf model set up as data-generating model. The priors for the constrained parameters are 
+    their ur-priors.
+
+    Args:
+        - stat_model: pyhf model.
+        - unconstrained_priors (dictionary): Dictionary of all unconstrained priors.
+        - data (list or array): Observations used for the inference step.
+        - auxdata (list or array): Auxiliary observations used for the inference step
+    Returns:
+        - model_combined (context): Context in which PyMC methods can be used.
     '''
     priorDict_combined = prepare_inference_combined.build_priorDict_combined(stat_model, unconstrained_priors)
 
