@@ -5,7 +5,6 @@ import pytensor
 from pytensor import tensor as pt
 
 from pyhf_pymc import make_op
-from pyhf_pymc import prepare_inference
 
 import numpy as np
 

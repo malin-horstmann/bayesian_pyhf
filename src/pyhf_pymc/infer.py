@@ -44,7 +44,6 @@ def model_conjugate(stat_model, unconstrained_priors, data):
     expData_op_Act = make_op.makeOp_Act(stat_model)
 
     with pm.Model():
-        # pars_conjugate = prepare_inference.priors2pymc_combined(stat_model, priorDict_conjugate)
         pars_conjugate = prepare_inference.priors2pymc(stat_model, priorDict_conjugate)
         
         Expected_Data = pm.Poisson("Expected_Data", mu=expData_op_Act(pars_conjugate), observed=data)

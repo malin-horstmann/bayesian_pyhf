@@ -6,6 +6,7 @@ from pytensor import tensor as pt
 
 from pyhf_pymc import make_op
 from pyhf_pymc import prepare_inference
+from pyhf_pymc import prepare_inference_combined
 
 import numpy as np
 
@@ -54,7 +55,7 @@ def priorDict_combined(model):
     unconstr_priors = {'my_shapefactor': {'type': 'HalfNormal_Unconstrained', 'sigma': [.1]}, 
     'mu': {'type': 'Gamma_Unconstrained', 'alpha': [5.], 'beta': [1.]}} 
 
-    return prepare_inference.build_priorDict_combined(model, unconstr_priors)
+    return prepare_inference_combined.build_priorDict_combined(model, unconstr_priors)
 
 class TestPriorDicts:
     def test_PriorDict_conjugate(self, model, priorDict_conjugate):
