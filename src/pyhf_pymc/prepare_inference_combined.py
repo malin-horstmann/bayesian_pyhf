@@ -67,7 +67,7 @@ def build_priorDict_combined(model, unconstr_priors):
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
             prior_dict[key] = {}
             prior_dict[key]['type'] = 'Gamma'
-            prior_dict[key]['alpha_beta'] = (np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]])**3 - np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]
+            prior_dict[key]['alpha_beta'] = 0.0001
         
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
