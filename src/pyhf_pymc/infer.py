@@ -22,6 +22,7 @@ import pymc as pm
 import arviz as az
 
 from pyhf_pymc import prepare_inference
+from pyhf_pymc import prepare_inference_combined
 from pyhf_pymc import make_op
 
 from contextlib import contextmanager
@@ -48,14 +49,13 @@ def model_combined(stat_model, unconstrained_priors, data, auxdata):
     '''
     
     '''
-    priorDict_combined = prepare_inference.build_priorDict_combined(stat_model, unconstrained_priors)
+    priorDict_combined = prepare_inference_combined.build_priorDict_combined(stat_model, unconstrained_priors)
 
     expData_op_Act = make_op.makeOp_Act(stat_model)
     expData_op_Aux = make_op.makeOp_Aux(stat_model)
 
     with pm.Model():
-        pars_combined = prepare_inference.priors2pymc_combined(stat_model, priorDict_combined)
-        # pars_combined = prepare_inference.priors2pymc(stat_model, priorDict_combined)
+        pars_combined = prepare_inference_combined.priors2pymc_combined(stat_model, priorDict_combined)
 
         Expected_ActData = pm.Poisson("Expected_ActData", mu=expData_op_Act(pars_combined), observed=data)
         Expected_AuxData = pm.Normal("Expected_AuxData", mu=expData_op_Aux(pars_combined), observed=auxdata)
