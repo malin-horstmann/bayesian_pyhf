@@ -17,7 +17,7 @@ def build_priorDict_conjugate(model, unconstr_priors):
             }
     Returns:
         - prior_dict (dictionary): Dictionary of of all parameter priors. Next to the 'name'- and 'type'-keys, the following keys for the constrained
-          parameters depend on the distribution type: Normal ('mu', 'sigma'), HalfNormal ('mu'), Gamma ('alpha_beta')
+          parameters depend on the distribution type: Normal ('mu', 'sigma'), HalfNormal ('mu'), Gamma ('alpha', 'beta')
     """ 
 
     # Turn partiotion indices to ints
@@ -45,7 +45,8 @@ def build_priorDict_conjugate(model, unconstr_priors):
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
             prior_dict[key] = {}
             prior_dict[key]['type'] = 'Gamma'
-            prior_dict[key]['alpha_beta'] = (np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]])
+            prior_dict[key]['alpha'] = (np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]] + 0.001)
+            prior_dict[key]['beta'] = (np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]] * (1 + 0.001))
         
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
@@ -117,7 +118,7 @@ def priors2pymc(model, prior_dict):
                 pars_combined.extend(pm.Normal(name, mu=specs['mu'], sigma=specs['sigma']))
             
             if specs['type'] == 'Gamma':
-                pars_combined.extend(pm.Gamma(name, alpha=specs['alpha_beta'], beta=specs['alpha_beta']))
+                pars_combined.extend(pm.Gamma(name, alpha=specs['alpha'], beta=specs['beta']))
 
     
     # Test
