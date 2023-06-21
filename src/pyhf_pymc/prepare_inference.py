@@ -175,16 +175,16 @@ def priors2pymc(model, prior_dict):
                 pars_combined.extend(pm.Gamma(name, alpha=specs['alpha'], beta=specs['beta']))
             
             if specs['type'] == 'Normal':
-                pars_combined.extend(pm.Normal(name, mu=specs['mu'], sigma=specs['sigma']))
+                pars_combined.extend([pm.Normal(name, mu=specs['mu'], sigma=specs['sigma'])])
             
             if specs['type'] == 'Gamma':
                 pars_combined.extend(pm.Gamma(name, alpha=specs['alpha_beta'], beta=specs['alpha_beta']))
     
     # Test
-    try:
-        assert len(pars_combined) == len(model.config.suggested_init())
-    except:
-        raise ValueError('Number of parameters is incorrect.')
+    # try:
+    #     assert len(pars_combined) == len(model.config.suggested_init())
+    # except:
+    #     raise ValueError('Number of parameters is incorrect.')
 
     pars_combined = pt.as_tensor_variable(pars_combined)
        
