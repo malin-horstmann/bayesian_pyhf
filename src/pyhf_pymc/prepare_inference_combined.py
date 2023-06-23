@@ -81,44 +81,6 @@ def build_priorDict_combined(model, unconstr_priors):
     return prior_dict
 
 
-def get_target(model):
-    """
-    Ordering list for the parameters.
-
-    Args:
-        - model: pyhf model.
-    Returns:
-        - target (list): Specifies the position index for each parameter.
-    """
-
-    target = []
-    unconstr_idx, norm_idx, poiss_idx = [], [], []
-
-    for k, v in model.config.par_map.items():
-
-        if isinstance(v['paramset'], pyhf.parameters.unconstrained):
-            unconstr_idx = np.concatenate([
-                np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.unconstrained)
-                ])
-
-        if isinstance(v['paramset'], pyhf.parameters.paramsets.constrained_by_normal):
-            norm_idx = np.concatenate([
-                np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.constrained_by_normal)
-                ])
-
-        if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson):
-            poiss_idx = np.concatenate([
-                np.arange(v['slice'].start,v['slice'].stop) for k,v in model.config.par_map.items() if isinstance(v['paramset'], pyhf.parameters.constrained_by_poisson)
-                ])
-
-    for i in [unconstr_idx, norm_idx, poiss_idx]:
-        i = np.array(i)
-        if i.size != 0:
-            target.append(i)
-    target = np.concatenate(target)
-
-    return target
-
 def priors2pymc_combined(model, prior_dict):
     """
     Creates a pytensor pdf for each parameter. Alike pdfs are combined.
@@ -226,7 +188,7 @@ def priors2pymc_combined(model, prior_dict):
         except:
             raise ValueError('Number of parameters is incorrect.')
 
-        target = get_target(model)
+        target = utils.get_target(model)
         pars_combined = pt.as_tensor_variable(np.array(pars_combined, dtype=object)[target.argsort()].tolist())
 
     return pars_combined
