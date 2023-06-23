@@ -3,6 +3,8 @@ import pyhf
 import pymc as pm
 from pytensor import tensor as pt
 
+from pyhf_pymc import utils
+
 def build_priorDict_conjugate(model, unconstr_priors):
     """
     Builds a combined dictionary of constrained parameters (from the model definition) and 
@@ -17,7 +19,7 @@ def build_priorDict_conjugate(model, unconstr_priors):
             }
     Returns:
         - prior_dict (dictionary): Dictionary of of all parameter priors. Next to the 'name'- and 'type'-keys, the following keys for the constrained
-          parameters depend on the distribution type: Normal ('mu', 'sigma'), HalfNormal ('mu'), Gamma ('alpha_beta')
+          parameters depend on the distribution type: Normal ('mu', 'sigma'), HalfNormal ('mu'), Gamma ('alpha', 'beta')
     """ 
 
     # Turn partiotion indices to ints
@@ -34,18 +36,20 @@ def build_priorDict_conjugate(model, unconstr_priors):
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_normal):
             prior_dict[key] = {}
             prior_dict[key]['type'] = 'Normal'
-            prior_dict[key]['mu'] = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]
+            mu = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]
             
             sigma = []
             for i in partition_indices[model.config.auxdata_order.index(key)]:
                 sigma.append(model.constraint_model.constraints_gaussian.sigmas[sigma_counter])
                 sigma_counter += 1
-            prior_dict[key]['sigma'] = sigma
+            prior_dict[key]['mu'], prior_dict[key]['sigma'] = utils.get_normalPostHyperpars(mu, np.array(sigma), mu, np.full(len(mu), 0), np.full(len(mu), 1))
+    
     
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
             prior_dict[key] = {}
             prior_dict[key]['type'] = 'Gamma'
-            prior_dict[key]['alpha_beta'] = (np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]])**3
+            prior_dict[key]['alpha'], prior_dict[key]['beta'] = utils.get_gammaPostHyperpars(np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]], 0.01, 0.01)
+            
         
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
@@ -117,7 +121,7 @@ def priors2pymc(model, prior_dict):
                 pars_combined.extend(pm.Normal(name, mu=specs['mu'], sigma=specs['sigma']))
             
             if specs['type'] == 'Gamma':
-                pars_combined.extend(pm.Gamma(name, alpha=specs['alpha_beta'], beta=specs['alpha_beta']))
+                pars_combined.extend(pm.Gamma(name, alpha=specs['alpha'], beta=specs['beta']))
 
     
     # Test
