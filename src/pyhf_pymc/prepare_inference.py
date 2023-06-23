@@ -31,6 +31,9 @@ def build_priorDict_conjugate(model, unconstr_priors):
     prior_dict = {}
     sigma_counter = 0
 
+    ur_mu, ur_sigma = utils.set_UrHyperPars_Normal()
+    ur_alpha, ur_beta = utils.set_UrHyperPars_Gamma()
+
     for key, specs in model.config.par_map.items():
 
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_normal):
@@ -42,13 +45,13 @@ def build_priorDict_conjugate(model, unconstr_priors):
             for i in partition_indices[model.config.auxdata_order.index(key)]:
                 sigma.append(model.constraint_model.constraints_gaussian.sigmas[sigma_counter])
                 sigma_counter += 1
-            prior_dict[key]['mu'], prior_dict[key]['sigma'] = utils.get_normalPostHyperpars(mu, np.array(sigma), mu, np.full(len(mu), 0), np.full(len(mu), 1))
+            prior_dict[key]['mu'], prior_dict[key]['sigma'] = utils.get_normalPostHyperpars(mu, np.array(sigma), mu, np.full(len(mu), ur_mu), np.full(len(sigma), ur_sigma))
     
     
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
             prior_dict[key] = {}
             prior_dict[key]['type'] = 'Gamma'
-            prior_dict[key]['alpha'], prior_dict[key]['beta'] = utils.get_gammaPostHyperpars(np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]], 0.01, 0.01)
+            prior_dict[key]['alpha'], prior_dict[key]['beta'] = utils.get_gammaPostHyperpars(np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]], ur_alpha, ur_beta)
             
         
         if key in unconstr_priors.keys():

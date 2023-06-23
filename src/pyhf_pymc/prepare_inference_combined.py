@@ -15,13 +15,11 @@ from jax import grad, jit, vmap, value_and_grad, random
 import jax.numpy as jnp
 
 import pyhf
-pyhf.set_backend('jax')
-# pyhf.set_backend('numpy')
 
 import pymc as pm
 import arviz as az
 
-from pyhf_pymc import prepare_inference
+from pyhf_pymc import utils
 from pyhf_pymc import make_op
 
 from contextlib import contextmanager
@@ -51,23 +49,28 @@ def build_priorDict_combined(model, unconstr_priors):
     prior_dict = {}
     sigma_counter = 0
 
+    ur_mu, ur_sigma = utils.set_UrHyperPars_Normal()
+    ur_alpha, ur_beta = utils.set_UrHyperPars_Gamma()
+
     for key, specs in model.config.par_map.items():
 
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_normal):
             prior_dict[key] = {}
             prior_dict[key]['type'] = 'Normal'
-            prior_dict[key]['mu'] = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]
+            # prior_dict[key]['mu'] = np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]
+            prior_dict[key]['mu'] = np.full(len(np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]]), ur_mu)
             
             sigma = []
             for i in partition_indices[model.config.auxdata_order.index(key)]:
                 sigma.append(model.constraint_model.constraints_gaussian.sigmas[sigma_counter])
                 sigma_counter += 1
-            prior_dict[key]['sigma'] = sigma
+            prior_dict[key]['sigma'] = np.full(len(sigma), ur_sigma)
     
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
             prior_dict[key] = {}
             prior_dict[key]['type'] = 'Gamma'
-            prior_dict[key]['alpha_beta'] = np.full(len(partition_indices[model.config.auxdata_order.index(key)]), 0.001)
+            prior_dict[key]['alpha'] = np.full(len(partition_indices[model.config.auxdata_order.index(key)]), ur_alpha)
+            prior_dict[key]['beta'] = np.full(len(partition_indices[model.config.auxdata_order.index(key)]), ur_beta)
         
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]
@@ -96,7 +99,8 @@ def priors2pymc_combined(model, prior_dict):
         Normal_mu = [specs['mu'] for _, specs in prior_dict.items() if specs['type'] == 'Normal']
         Normal_sigma = [specs['sigma'] for _, specs in prior_dict.items() if specs['type'] == 'Normal']
 
-        Gamma_alpha_beta = [specs['alpha_beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma']
+        Gamma_alpha = [specs['alpha'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma']
+        Gamma_beta = [specs['beta'] for _, specs in prior_dict.items() if specs['type'] == 'Gamma']
 
         # Unconstrained
         Beta_Unconstr_alpha = [specs['alpha'] for _, specs in prior_dict.items() if specs['type'] == 'Beta_Unconstrained']
@@ -178,8 +182,8 @@ def priors2pymc_combined(model, prior_dict):
         if len(Normal_mu) != 0:
             pymc_Normals = pm.Normal('Normals', mu=np.concatenate(Normal_mu), sigma=np.concatenate(Normal_sigma))
             pars_combined.extend(pymc_Normals)
-        if len(Gamma_alpha_beta) != 0:  
-            pymc_Gammas = pm.Gamma('Gammas', alpha=np.concatenate(Gamma_alpha_beta), beta=np.concatenate(Gamma_alpha_beta))
+        if len(Gamma_alpha) != 0:  
+            pymc_Gammas = pm.Gamma('Gammas', alpha=np.concatenate(Gamma_alpha), beta=np.concatenate(Gamma_beta))
             pars_combined.extend(pymc_Gammas)
 
         # Test

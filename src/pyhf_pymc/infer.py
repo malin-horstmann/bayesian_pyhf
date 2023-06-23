@@ -46,7 +46,7 @@ def model_conjugate(stat_model, unconstrained_priors, data):
     with pm.Model():
         pars_conjugate = prepare_inference.priors2pymc(stat_model, priorDict_conjugate)
         
-        Expected_Data = pm.Poisson("Expected_Data", mu=expData_op_Act(pars_conjugate), observed=data)
+        Expected_Data = pm.Normal("Expected_Data", mu=expData_op_Act(pars_conjugate), observed=data)
         yield
         
     return model_conjugate
@@ -73,7 +73,7 @@ def model_combined(stat_model, unconstrained_priors, data, auxdata):
     with pm.Model():
         pars_combined = prepare_inference_combined.priors2pymc_combined(stat_model, priorDict_combined)
 
-        Expected_ActData = pm.Poisson("Expected_ActData", mu=expData_op_Act(pars_combined), observed=data)
+        Expected_ActData = pm.Normal("Expected_ActData", mu=expData_op_Act(pars_combined), observed=data)
         Expected_AuxData = pm.Normal("Expected_AuxData", mu=expData_op_Aux(pars_combined), observed=auxdata)
         yield
         

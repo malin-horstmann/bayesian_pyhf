@@ -15,8 +15,7 @@ from jax import grad, jit, vmap, value_and_grad, random
 import jax.numpy as jnp
 
 import pyhf
-pyhf.set_backend('jax')
-# pyhf.set_backend('numpy')
+
 
 import pymc as pm
 import arviz as az

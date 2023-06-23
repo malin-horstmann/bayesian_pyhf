@@ -4,6 +4,11 @@ import pyhf
 import pymc as pm
 from pytensor import tensor as pt
 
+def set_UrHyperPars_Normal():
+    return 0., 2.
+
+def set_UrHyperPars_Gamma():
+    return 1., 0.1
 
 def get_gammaPostHyperpars(aux_obs, ur_alpha, ur_beta):
     '''
