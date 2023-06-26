@@ -1,6 +1,7 @@
 import pytest
 
 import pyhf
+pyhf.set_backend('jax')
 import pytensor
 from pytensor import tensor as pt
 
