@@ -138,7 +138,6 @@ def priors2pymc_combined(model, prior_dict):
         Uniform_Unconstr_lower = [specs['lower'] for _, specs in prior_dict.items() if specs['type'] == 'Uniform_Unconstrained']
         Uniform_Unconstr_upper = [specs['upper'] for _, specs in prior_dict.items() if specs['type'] == 'Uniform_Unconstrained']
 
-
         # Building the PyMC distributions
         pars_combined = []
         if len(Beta_Unconstr_alpha) != 0:
