@@ -28,11 +28,10 @@ def get_gammaPostHyperpars(aux_obs, ur_alpha, ur_beta):
 
     return alpha, beta
 
-def get_normalPostHyperpars(aux_mu, aux_sigma, aux_obs, ur_mu, ur_sigma):
+def get_normalPostHyperpars(aux_sigma, aux_obs, ur_mu, ur_sigma):
     '''
     Returns the (normal) posterior hyperparameters according to the rules of conjufate priors for normal models and ur-priors.
     Args:
-        - aux_mu (array): mean hyperparameter of the data-generating model
         - aux_sigma (array)): sigma hyperparameter of the data-generating model
         - aux_obs (array): auxiliary data
         - ur_mu (array): mean hyperparameter of the ur-prior distributuion

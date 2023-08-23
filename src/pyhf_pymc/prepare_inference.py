@@ -5,7 +5,7 @@ from pytensor import tensor as pt
 
 from pyhf_pymc import utils
 
-def build_priorDict_conjugate(model, unconstr_priors):
+def build_priorDict_conjugate(model, unconstr_priors, ur_hyperparameters = None):
     """
     Builds a combined dictionary of constrained parameters (from the model definition) and 
     unconstrained parameters (have to be submitted by hand).
@@ -17,12 +17,19 @@ def build_priorDict_conjugate(model, unconstr_priors):
                 'mu_2': {'type': 'HalfNormal_Unconstrained', 'sigma': [.1]},
                 'mu': {'type': 'Gamma_Unconstrained', 'alpha': [5.], 'beta': [1.]}
             }
+        - ur_hyperparameters (dictionary): Arrays have to be submitted in the order of model.config.parameters. 
+            If not given, Normal hyperparameters are 0, 1 and Gamma hyperparameters are 1, 0.1. (set in utils.py)
+            Should follow:
+            ur_hyperparameters = {
+                'Gamma': [[1.0, 0.1], [1.0, 0.1], [1.0, 0.1]],
+                'Normal': [[0, 2], [0, 2], [0, 2]]
+            }
     Returns:
         - prior_dict (dictionary): Dictionary of of all parameter priors. Next to the 'name'- and 'type'-keys, the following keys for the constrained
           parameters depend on the distribution type: Normal ('mu', 'sigma'), HalfNormal ('mu'), Gamma ('alpha', 'beta')
     """ 
 
-    # Turn partiotion indices to ints
+    # Turn partition indices to ints
     partition_indices = []
     for array in model.constraint_model.viewer_aux.selected_viewer._partition_indices:
         array = [int(x) for x in array]
@@ -30,11 +37,16 @@ def build_priorDict_conjugate(model, unconstr_priors):
 
     prior_dict = {}
     sigma_counter = 0
+    gaussian_counter = 0
+    gamma_counter = 0
 
     ur_mu, ur_sigma = utils.set_UrHyperPars_Normal()
     ur_alpha, ur_beta = utils.set_UrHyperPars_Gamma()
 
     for key, specs in model.config.par_map.items():
+        if ur_hyperparameters:
+            Normal_UrHyperparameters = ur_hyperparameters['Normal']
+            Gamma_UrHyperparameters = ur_hyperparameters['Gamma']
 
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_normal):
             prior_dict[key] = {}
@@ -45,14 +57,23 @@ def build_priorDict_conjugate(model, unconstr_priors):
             for i in partition_indices[model.config.auxdata_order.index(key)]:
                 sigma.append(model.constraint_model.constraints_gaussian.sigmas[sigma_counter])
                 sigma_counter += 1
-            prior_dict[key]['mu'], prior_dict[key]['sigma'] = utils.get_normalPostHyperpars(mu, np.array(sigma), mu, np.full(len(mu), ur_mu), np.full(len(sigma), ur_sigma))
-    
-    
+
+            gaussian_counter += 1
+            if ur_hyperparameters:
+                prior_dict[key]['mu'], prior_dict[key]['sigma'] = utils.get_normalPostHyperpars(np.array(sigma), mu, Normal_UrHyperparameters[gaussian_counter][0], Normal_UrHyperparameters[gaussian_counter][1])
+            else:
+                prior_dict[key]['mu'], prior_dict[key]['sigma'] = utils.get_normalPostHyperpars(np.array(sigma), mu, np.full(len(mu), ur_mu), np.full(len(sigma), ur_sigma))
+            
+
         if isinstance(specs['paramset'], pyhf.parameters.constrained_by_poisson):
             prior_dict[key] = {}
             prior_dict[key]['type'] = 'Gamma'
-            prior_dict[key]['alpha'], prior_dict[key]['beta'] = utils.get_gammaPostHyperpars(np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]], ur_alpha, ur_beta)
-            
+            if ur_hyperparameters:
+                prior_dict[key]['alpha'], prior_dict[key]['beta'] = utils.get_gammaPostHyperpars(np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]], Gamma_UrHyperparameters[gamma_counter][0], Gamma_UrHyperparameters[gamma_counter][1])
+            else:
+                prior_dict[key]['alpha'], prior_dict[key]['beta'] = utils.get_gammaPostHyperpars(np.array(model.config.auxdata)[partition_indices[model.config.auxdata_order.index(key)]], ur_alpha, ur_beta)
+
+            gamma_counter += 1
         
         if key in unconstr_priors.keys():
             prior_dict[key] = unconstr_priors[key]

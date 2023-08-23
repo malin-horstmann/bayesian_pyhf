@@ -35,7 +35,7 @@ conda-lock install --name pyhf-pymc conda-lock.yml
 or
 
 ```
-conda env create --name pyhf-pymc --file conda-lock.yml
+conda env create --file conda-lock.yml
 ```
 
 See `conda-lock install --help` for additional options.

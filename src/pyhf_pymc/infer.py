@@ -28,7 +28,7 @@ from pyhf_pymc import make_op
 from contextlib import contextmanager
 
 @contextmanager
-def model_conjugate(stat_model, unconstrained_priors, data):
+def model_conjugate(stat_model, unconstrained_priors, data, ur_hyperparameters = None):
     '''
     Builds a context with the pyhf model set up as data-generating model. The priors for the constrained parameters 
     have already been updated using conjugate priors.
@@ -40,7 +40,7 @@ def model_conjugate(stat_model, unconstrained_priors, data):
     Returns:
         - model_combined (context): Context in which PyMC methods can be used.
     '''
-    priorDict_conjugate = prepare_inference.build_priorDict_conjugate(stat_model, unconstrained_priors)
+    priorDict_conjugate = prepare_inference.build_priorDict_conjugate(stat_model, unconstrained_priors, ur_hyperparameters)
     expData_op_Act = make_op.makeOp_Act(stat_model)
 
     with pm.Model():
@@ -74,7 +74,11 @@ def model_combined(stat_model, unconstrained_priors, data, auxdata):
         pars_combined = prepare_inference_combined.priors2pymc_combined(stat_model, priorDict_combined)
 
         Expected_ActData = pm.Poisson("Expected_ActData", mu=expData_op_Act(pars_combined), observed=data)
-        Expected_AuxData = pm.Normal("Expected_AuxData", mu=expData_op_Aux(pars_combined), observed=auxdata)
+        # Normal constraints
+        # Expected_AuxData = pm.Normal("Expected_AuxData", mu=expData_op_Aux(pars_combined), observed=auxdata)
+        # Poisson constraints
+        Expected_AuxData = pm.Poisson("Expected_AuxData", mu=expData_op_Aux(pars_combined), observed=auxdata)
+        aa = pm.Poisson('Mult', mu=pars_combined, observed=auxdata)
         yield
         
     return model_combined

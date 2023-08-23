@@ -100,31 +100,40 @@ def makeOp_Aux(model):
         - expData_op (class): Wrapper class for model.expected_data.
     '''
 
-    @jax.jit
-    def processed_expData(parameters):
-        return model.expected_auxdata(parameters)
-    jitted_processed_expData = jax.jit(processed_expData)
+    backend, _ = pyhf.get_backend()
 
-    @jax.jit
-    def vjp_expData(pars, tang_vec):
-        _, back = jax.vjp(processed_expData, pars)
-        return back(tang_vec)[0]
-    jitted_vjp_expData = jax.jit(vjp_expData)
+    if isinstance(backend, pyhf.tensor.jax_backend):
+        @jax.jit
+        def processed_expData(parameters):
+            return model.expected_auxdata(parameters)
+        jitted_processed_expData = jax.jit(processed_expData)
 
-    class VJPOp(Op):
-        '''
-        
-        '''
-        itypes = [pt.dvector,pt.dvector]  
-        otypes = [pt.dvector]
+        @jax.jit
+        def vjp_expData(pars, tang_vec):
+            _, back = jax.vjp(processed_expData, pars)
+            return back(tang_vec)[0]
+        jitted_vjp_expData = jax.jit(vjp_expData)
+    
+    else:
+        def processed_expData(parameters):
+            return model.expected_auxdata(parameters)
+        jitted_processed_expData = processed_expData
 
-        def perform(self, node, inputs, outputs):
-            (parameters, tangent_vector) = inputs
-            results = jitted_vjp_expData(parameters, tangent_vector)
+    if isinstance(backend, pyhf.tensor.jax_backend):
+        class VJPOp(Op):
+            '''
+            
+            '''
+            itypes = [pt.dvector,pt.dvector]  
+            otypes = [pt.dvector]
 
-            outputs[0][0] = np.asarray(results)
+            def perform(self, node, inputs, outputs):
+                (parameters, tangent_vector) = inputs
+                results = jitted_vjp_expData(parameters, tangent_vector)
 
-    vjp_op = VJPOp()
+                outputs[0][0] = np.asarray(results)
+
+        vjp_op = VJPOp()
 
     class ExpDataOp(Op):
         '''
@@ -139,11 +148,12 @@ def makeOp_Aux(model):
 
             outputs[0][0] = np.asarray(results)
 
-        def grad(self, inputs, output_gradients):
-            (parameters,) = inputs
-            (tangent_vector,) = output_gradients
-            return [vjp_op(parameters, tangent_vector)]
-
+        if isinstance(backend, pyhf.tensor.jax_backend):
+            def grad(self, inputs, output_gradients):
+                (parameters,) = inputs
+                (tangent_vector,) = output_gradients
+                return [vjp_op(parameters, tangent_vector)]
+       
     expData_op = ExpDataOp()    
 
     return expData_op
