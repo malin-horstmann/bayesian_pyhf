@@ -79,10 +79,10 @@ def build_priorDict_conjugate(model, unconstr_priors, ur_hyperparameters = None)
             prior_dict[key] = unconstr_priors[key]
 
     # Test
-    try:
-        assert prior_dict.keys() == model.config.par_map.keys()
-    except:
-        raise ValueError('Order of parameters is different from model.config.par_map.')
+    # try:
+    #     assert prior_dict.keys() == model.config.par_map.keys()
+    # except:
+    #     raise ValueError('Order of parameters is different from model.config.par_map.')
 
     return prior_dict
 

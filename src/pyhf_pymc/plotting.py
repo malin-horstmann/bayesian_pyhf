@@ -15,7 +15,7 @@ from jax import grad, jit, vmap, value_and_grad, random
 import jax.numpy as jnp
 
 import pyhf
-pyhf.set_backend('jax')
+# pyhf.set_backend('jax')
 # pyhf.set_backend('numpy')
 
 import pymc as pm
@@ -25,8 +25,8 @@ from pyhf_pymc import prepare_inference
 from pyhf_pymc import make_op
 from pyhf_pymc import infer
 
-blue = '#1F449C'
-orange = '#E57A77'
+blue = '#7CA1CC' # '#A8B6CC'
+rosa = '#E57A77'
 
 def prior_posterior_predictives(model, data, post_pred, prior_pred, bin_steps):
     '''
@@ -42,18 +42,18 @@ def prior_posterior_predictives(model, data, post_pred, prior_pred, bin_steps):
         post_means.append(post_pred.posterior_predictive.Expected_Data[0].T[i].mean())
 
     # Plot means
-    plt.scatter(np.linspace(0,nBins-1,nBins), prior_means, color=orange, label='Prior Predictive')
+    plt.scatter(np.linspace(0,nBins-1,nBins), prior_means, color=rosa, label='Prior Predictive')
     plt.scatter(np.linspace(0,nBins-1,nBins), post_means, color=blue, label='Posterior Predictive')
 
     # Plot samples
     for i in range(nBins):
-        plt.scatter(np.full(len(prior_pred.prior_predictive.Expected_Data[0].T[i]), i), prior_pred.prior_predictive.Expected_Data[0].T[i], alpha=0.1, color=orange, linewidths=0)
-        plt.scatter(np.full(len(post_pred.posterior_predictive.Expected_Data[0].T[i]), i), post_pred.posterior_predictive.Expected_Data[0].T[i], alpha=0.1, color=blue, linewidths=0)
+        plt.scatter(np.full(len(prior_pred.prior_predictive.Expected_Data[0].T[i]), i), prior_pred.prior_predictive.Expected_Data[0].T[i], alpha=0.051, color=rosa, linewidths=0)
+        plt.scatter(np.full(len(post_pred.posterior_predictive.Expected_Data[0].T[i]), i), post_pred.posterior_predictive.Expected_Data[0].T[i], alpha=0.051, color=blue, linewidths=0)
 
     # Plot data
-    plt.scatter(np.arange(nBins), data, marker='P', c = 'k',s=70, zorder = 999, label = "Data")
+    plt.scatter(np.arange(nBins), data, marker='P', c = 'k',s=50, zorder = 999, label = "Data")
 
-    plt.legend(loc='upper left')
+    plt.legend(loc='upper right')
     plt.xticks(np.arange(0, nBins, bin_steps))
     plt.xlabel('Bins')
     plt.ylabel('Events')
@@ -86,8 +86,8 @@ def calibration(model, prior_pred, prior_dict):
         post_data.append(c[0])
 
     # Plot Normals
-    plt.hist(prior_Normals, 40, alpha = 0.5, color=orange, linewidth=2, label='Prior', edgecolor=orange)
-    _, bins, _ = plt.hist(prior_Normals, bins=40, histtype='step', color=orange, alpha=0.000001)
+    plt.hist(prior_Normals, 40, alpha = 0.5, color=rosa, linewidth=2, label='Prior', edgecolor=rosa)
+    _, bins, _ = plt.hist(prior_Normals, bins=40, histtype='step', color=rosa, alpha=0.000001)
     plt.hist(post_Normals, bins=bins, alpha = 0.5, color=blue, linewidth=2, label='Posterior', edgecolor=blue)
     plt.xlabel('Background')
 
@@ -96,8 +96,8 @@ def calibration(model, prior_pred, prior_dict):
     plt.show()
         
     # Plot Unconstrained 
-    plt.hist(prior_Gammas, 40, alpha = 0.5, color=orange, linewidth=2, label='Prior', edgecolor=orange)
-    _, bins, _ = plt.hist(prior_Gammas, bins=40, histtype='step', color=orange, alpha=0.000001)
+    plt.hist(prior_Gammas, 40, alpha = 0.5, color=rosa, linewidth=2, label='Prior', edgecolor=rosa)
+    _, bins, _ = plt.hist(prior_Gammas, bins=40, histtype='step', color=rosa, alpha=0.000001)
     plt.hist(post_Gammas, bins=bins, alpha = 0.5, color=blue, linewidth=2, label='Posterior', edgecolor=blue)
     plt.xlabel('Signal Strenth')
 
@@ -144,7 +144,7 @@ def plot_autocorrelation(model, unconstrained_priors, data):
     post_Unconstrained_NUTS_thinned = np.concatenate(np.array(thinned_NUTS.Unconstrained[0]))
 
     fig = plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_MH), width=0.5, alpha=0.8, color=blue, label='Metropolis-Hastings')
-    plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_NUTS), width=0.5, alpha=0.8, color=orange, label='HMC')
+    plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_NUTS), width=0.5, alpha=0.8, color=rosa, label='HMC')
     plt.fill_between(np.linspace(0, 100, 100), -0.2, 0.2, color='grey', alpha=0.2, zorder=0, linewidth=0)
     plt.xlabel('Draws')
     plt.ylabel('Autocorrelation')
@@ -154,7 +154,7 @@ def plot_autocorrelation(model, unconstrained_priors, data):
 
 
     plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_MH_thinned), width=0.5, alpha=0.8, color=blue, label='Metropolis-Hastings, thin: 12')
-    plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_NUTS_thinned), width=0.5, alpha=0.8, color=orange, label='HMC, thin: 6')
+    plt.bar(np.linspace(0, 100, 100), az.autocorr(post_Normals_NUTS_thinned), width=0.5, alpha=0.8, color=rosa, label='HMC, thin: 6')
     plt.fill_between(np.linspace(0, 100, 100), -0.2, 0.2, color='grey', alpha=0.2, zorder=0, linewidth=0)
     plt.xlabel('Draws')
     plt.ylabel('Autocorrelation')

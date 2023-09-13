@@ -15,7 +15,7 @@ from jax import grad, jit, vmap, value_and_grad, random
 import jax.numpy as jnp
 
 import pyhf
-pyhf.set_backend('jax')
+# pyhf.set_backend('jax')
 # pyhf.set_backend('numpy')
 
 import pymc as pm
@@ -46,7 +46,8 @@ def model_conjugate(stat_model, unconstrained_priors, data, ur_hyperparameters =
     with pm.Model():
         pars_conjugate = prepare_inference.priors2pymc(stat_model, priorDict_conjugate)
         
-        Expected_Data = pm.Poisson("Expected_Data", mu=expData_op_Act(pars_conjugate), observed=data)
+        # Expected_Data = pm.Poisson("Expected_Data", mu=expData_op_Act(pars_conjugate), observed=data)
+        Expected_Data = pm.Normal("Expected_Data", mu=expData_op_Act(pars_conjugate), observed=data)
         yield
         
     return model_conjugate
