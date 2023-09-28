@@ -28,7 +28,7 @@ from Bayesian_pyhf import infer
 blue = '#7CA1CC' # '#A8B6CC'
 rosa = '#E57A77'
 
-def prior_posterior_predictives(model, data, post_pred, prior_pred, bin_steps):
+def prior_posterior_predictives(model, data, post_pred, prior_pred, bin_steps=1):
     '''
     
     '''

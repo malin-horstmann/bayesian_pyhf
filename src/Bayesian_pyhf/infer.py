@@ -39,14 +39,14 @@ def model(stat_model, unconstrained_priors, data, ur_hyperparameters = None):
     Returns:
         - model (context): Context in which PyMC methods can be used.
     '''
-    priorDict_conjugate = prepare_inference.build_priorDict_conjugate(stat_model, unconstrained_priors, ur_hyperparameters)
+    priorDict = prepare_inference.build_priorDict(stat_model, unconstrained_priors, ur_hyperparameters)
     expData_op_Act = make_op.makeOp_Act(stat_model)
 
     with pm.Model():
-        pars_conjugate = prepare_inference.priors2pymc(stat_model, priorDict_conjugate)
+        pars = prepare_inference.priors2pymc(stat_model, priorDict)
         
-        Expected_Data = pm.Poisson("Expected_Data", mu=expData_op_Act(pars_conjugate), observed=data)
-        # Expected_Data = pm.Normal("Expected_Data", mu=expData_op_Act(pars_conjugate), observed=data)
+        Expected_Data = pm.Poisson("Expected_Data", mu=expData_op_Act(pars), observed=data)
+        # Expected_Data = pm.Normal("Expected_Data", mu=expData_op_Act(pars), observed=data)
         yield
         
     return model
