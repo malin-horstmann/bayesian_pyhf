@@ -6,7 +6,7 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "pyhf_pymc"
+name = "Bayesian_pyhf"
 dynamic = ["version"]
 description = "Tools for Bayesian analysis with pyhf"
 readme = "README.md"
@@ -68,7 +68,7 @@ source = "vcs"
 local_scheme = "no-local-version"
 
 [tool.hatch.build.hooks.vcs]
-version-file = "src/pyhf_pymc/_version.py"
+version-file = "src/Bayesian_pyhf/_version.py"
 
 [tool.hatch.build.targets.sdist]
 # hatchling always includes:
@@ -79,4 +79,4 @@ only-include = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pyhf_pymc"]
+packages = ["src/Bayesian_pyhf"]
