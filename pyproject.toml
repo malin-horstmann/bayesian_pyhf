@@ -47,10 +47,10 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/malin-horstmann/pyhf_pymc"
-"Issue Tracker" = "https://github.com/malin-horstmann/pyhf_pymc/issues"
-"Releases" = "https://github.com/malin-horstmann/pyhf_pymc/releases"
-"Source Code" = "https://github.com/malin-horstmann/pyhf_pymc"
+"Homepage" = "https://github.com/malin-horstmann/Bayesian_pyhf"
+"Issue Tracker" = "https://github.com/malin-horstmann/Bayesian_pyhf/issues"
+"Releases" = "https://github.com/malin-horstmann/Bayesian_pyhf/releases"
+"Source Code" = "https://github.com/malin-horstmann/Bayesian_pyhf"
 
 [project.optional-dependencies]
 
