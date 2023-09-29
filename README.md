@@ -2,13 +2,19 @@
 The aim of this project is to provide tools for Bayesian analysis of ``pyhf`` models using the Python library ``PyMC``.
 
 ## Setup
-To set up a Python virtual environment, download the following dependency file [environment.yml](https://github.com/malin-horstmann/pyhf_pymc/blob/main/environment.yml) and run:
+To set up a Python virtual environment, download the following dependency file [environment.yml](https://github.com/malin-horstmann/Bayesian_pyhf/blob/main/environment.yml) and run:
 
 ```
 conda env create --file environment.yml
 ```
 
-For a quick example, see [example.ipynb](https://github.com/malin-horstmann/pyhf_pymc/blob/main/examples/example.ipynb).
+You can then run
+```
+pip install --editable .
+```
+for an editable install of `Bayesian_pyhf`.
+
+For a quick example, see [example.ipynb](https://github.com/malin-horstmann/Bayesian_pyhf/blob/main/examples/example.ipynb).
 
 ## Development
 
@@ -29,7 +35,7 @@ nox
 An environment can then be created from the lock file either with
 
 ```
-conda-lock install --name pyhf-pymc conda-lock.yml
+conda-lock install --name Bayesian_pyhf conda-lock.yml
 ```
 
 or
@@ -46,5 +52,5 @@ To add new dependencies to the environment definition files simply add the depen
 To update your existing environment from an updated `environment.yml` file use
 
 ```
-conda env update --name pyhf-pymc --file environment.yml
+conda env update --name Bayesian_pyhf --file environment.yml
 ```

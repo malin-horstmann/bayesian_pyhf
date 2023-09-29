@@ -3,13 +3,13 @@ import pyhf
 import pymc as pm
 from pytensor import tensor as pt
 
-from pyhf_pymc import utils
+from Bayesian_pyhf import utils
 
-def build_priorDict_conjugate(model, unconstr_priors, ur_hyperparameters = None):
+def build_priorDict(model, unconstr_priors, ur_hyperparameters = None):
     """
     Builds a combined dictionary of constrained parameters (from the model definition) and 
     unconstrained parameters (have to be submitted by hand).
-
+ 
     Args:
         - model:  pyhf model.
         - unconstr_priors (dictionary): Dictionary of unconstrained parameters of the form:

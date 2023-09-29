@@ -21,14 +21,14 @@ import pyhf
 import pymc as pm
 import arviz as az
 
-from pyhf_pymc import prepare_inference
-from pyhf_pymc import make_op
-from pyhf_pymc import infer
+from Bayesian_pyhf import prepare_inference
+from Bayesian_pyhf import make_op
+from Bayesian_pyhf import infer
 
 blue = '#7CA1CC' # '#A8B6CC'
 rosa = '#E57A77'
 
-def prior_posterior_predictives(model, data, post_pred, prior_pred, bin_steps):
+def prior_posterior_predictives(model, data, post_pred, prior_pred, bin_steps=1):
     '''
     
     '''
