@@ -14,7 +14,7 @@ pip install --editable .
 ```
 for an editable install of `Bayesian_pyhf`.
 
-For a quick example, see [example.ipynb](https://github.com/malin-horstmann/Bayesian_pyhf/blob/main/examples/example.ipynb).
+For a quick example, see [example.ipynb](https://github.com/malin-horstmann/Bayesian_pyhf/blob/main/examples/SimpleEx.ipynb).
 
 ## Development
 
