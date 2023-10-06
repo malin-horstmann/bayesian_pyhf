@@ -4,7 +4,7 @@ import pyhf
 import pytensor
 from pytensor import tensor as pt
 
-from pyhf_pymc import make_op
+from Bayesian_pyhf import make_op
 
 import numpy as np
 

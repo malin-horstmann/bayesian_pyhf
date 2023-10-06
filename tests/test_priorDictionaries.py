@@ -4,9 +4,9 @@ import pyhf
 import pytensor
 from pytensor import tensor as pt
 
-from pyhf_pymc import make_op
-from pyhf_pymc import prepare_inference
-from pyhf_pymc import prepare_inference_combined
+from Bayesian_pyhf import make_op
+from Bayesian_pyhf import prepare_inference
+from Bayesian_pyhf import prepare_inference_combined
 
 import numpy as np
 
