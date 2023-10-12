@@ -6,7 +6,6 @@ from pytensor import tensor as pt
 
 from Bayesian_pyhf import make_op
 from Bayesian_pyhf import prepare_inference
-from Bayesian_pyhf import prepare_inference_combined
 
 import numpy as np
 
@@ -50,16 +49,6 @@ def priorDict_conjugate(model):
 
     return prepare_inference.build_priorDict_conjugate(model, unconstr_priors)
 
-@pytest.fixture
-def priorDict_combined(model):
-    unconstr_priors = {'my_shapefactor': {'type': 'HalfNormal_Unconstrained', 'sigma': [.1]}, 
-    'mu': {'type': 'Gamma_Unconstrained', 'alpha': [5.], 'beta': [1.]}} 
-
-    return prepare_inference_combined.build_priorDict_combined(model, unconstr_priors)
-
 class TestPriorDicts:
     def test_PriorDict_conjugate(self, model, priorDict_conjugate):
         assert list(priorDict_conjugate.keys()) == list(model.config.par_map.keys())
-    
-    def test_PriorDict_combined(self, model, priorDict_combined):
-        assert list(priorDict_combined.keys()) == list(model.config.par_map.keys())
