@@ -43,12 +43,12 @@ def model():
     return model
 
 @pytest.fixture
-def priorDict_conjugate(model):
+def priorDict(model):
     unconstr_priors = {'my_shapefactor': {'type': 'HalfNormal_Unconstrained', 'sigma': [.1]}, 
     'mu': {'type': 'Gamma_Unconstrained', 'alpha': [5.], 'beta': [1.]}} 
 
-    return prepare_inference.build_priorDict_conjugate(model, unconstr_priors)
+    return prepare_inference.build_priorDict(model, unconstr_priors)
 
 class TestPriorDicts:
-    def test_PriorDict_conjugate(self, model, priorDict_conjugate):
-        assert list(priorDict_conjugate.keys()) == list(model.config.par_map.keys())
+    def test_PriorDict(self, model, priorDict):
+        assert list(priorDict.keys()) == list(model.config.par_map.keys())
