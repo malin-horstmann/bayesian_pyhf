@@ -3,7 +3,7 @@ import pyhf
 import pymc as pm
 from pytensor import tensor as pt
 
-from Bayesian_pyhf import utils
+from bayesian_pyhf import utils
 
 def build_priorDict(model, unconstr_priors, ur_hyperparameters = None):
     """

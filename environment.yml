@@ -1,4 +1,4 @@
-name: Bayesian_pyhf
+name: bayesian_pyhf
 channels:
   - conda-forge
 dependencies:

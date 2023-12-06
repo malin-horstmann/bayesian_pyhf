@@ -21,9 +21,9 @@ import pyhf
 import pymc as pm
 import arviz as az
 
-from Bayesian_pyhf import prepare_inference
-from Bayesian_pyhf import make_op
-from Bayesian_pyhf import infer
+from bayesian_pyhf import prepare_inference
+from bayesian_pyhf import make_op
+from bayesian_pyhf import infer
 
 blue = '#7CA1CC' # '#A8B6CC'
 rosa = '#E57A77'

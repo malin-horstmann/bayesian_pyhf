@@ -5,7 +5,7 @@ pyhf.set_backend('jax')
 import pytensor
 from pytensor import tensor as pt
 
-from Bayesian_pyhf import make_op
+from bayesian_pyhf import make_op
 
 import numpy as np
 

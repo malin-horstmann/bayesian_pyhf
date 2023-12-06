@@ -4,8 +4,8 @@ import pyhf
 import pytensor
 from pytensor import tensor as pt
 
-from Bayesian_pyhf import make_op
-from Bayesian_pyhf import prepare_inference
+from bayesian_pyhf import make_op
+from bayesian_pyhf import prepare_inference
 
 import numpy as np
 

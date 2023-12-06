@@ -20,7 +20,7 @@ import pyhf
 import pymc as pm
 import arviz as az
 
-from Bayesian_pyhf import prepare_inference
+from bayesian_pyhf import prepare_inference
 
 def makeOp_Act(model):
     '''
