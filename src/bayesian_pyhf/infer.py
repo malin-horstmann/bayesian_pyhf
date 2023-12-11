@@ -21,8 +21,8 @@ import pyhf
 import pymc as pm
 import arviz as az
 
-from Bayesian_pyhf import prepare_inference
-from Bayesian_pyhf import make_op
+from bayesian_pyhf import prepare_inference
+from bayesian_pyhf import make_op
 
 from contextlib import contextmanager
 

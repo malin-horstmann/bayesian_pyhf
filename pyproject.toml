@@ -6,7 +6,7 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "Bayesian_pyhf"
+name = "bayesian_pyhf"
 dynamic = ["version"]
 description = "Tools for Bayesian analysis with pyhf"
 readme = "README.md"
@@ -47,10 +47,10 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/malin-horstmann/Bayesian_pyhf"
-"Issue Tracker" = "https://github.com/malin-horstmann/Bayesian_pyhf/issues"
-"Releases" = "https://github.com/malin-horstmann/Bayesian_pyhf/releases"
-"Source Code" = "https://github.com/malin-horstmann/Bayesian_pyhf"
+"Homepage" = "https://github.com/malin-horstmann/bayesian_pyhf"
+"Issue Tracker" = "https://github.com/malin-horstmann/bayesian_pyhf/issues"
+"Releases" = "https://github.com/malin-horstmann/bayesian_pyhf/releases"
+"Source Code" = "https://github.com/malin-horstmann/bayesian_pyhf"
 
 [project.optional-dependencies]
 
@@ -68,7 +68,7 @@ source = "vcs"
 local_scheme = "no-local-version"
 
 [tool.hatch.build.hooks.vcs]
-version-file = "src/Bayesian_pyhf/_version.py"
+version-file = "src/bayesian_pyhf/_version.py"
 
 [tool.hatch.build.targets.sdist]
 # hatchling always includes:
@@ -79,4 +79,4 @@ only-include = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/Bayesian_pyhf"]
+packages = ["src/bayesian_pyhf"]
